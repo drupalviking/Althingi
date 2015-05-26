@@ -1,0 +1,3 @@
+public/althingi/images
+public/althingi/node_modules
+!.gitignore
