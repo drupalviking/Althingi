@@ -1,1 +1,11 @@
 <h1>Alþingi</h1>
+<h2>Þinglistar</h2>
+<table>
+  <body>
+    <?php foreach($this->assemblies as $assembly) : ?>
+      <tr>
+        <td><?=$assembly->id;?>. Löggjafarþing</td>
+      </tr>
+    <?php endforeach; ?>
+  </body>
+</table>

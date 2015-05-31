@@ -25,6 +25,55 @@ return array(
                     ),
                 ),
             ),
+          'assembly' => array(
+            'type' => 'Zend\Mvc\Router\Http\Literal',
+            'options' => array(
+              'route' => '/assembly',
+              'defaults' => array(
+                'controller' => 'Althingi\Controller\Assembly',
+                'action' => 'index'
+              ),
+            ),
+            'may_terminate' => true,
+            'child_routes' => array(
+              'index' => array(
+                'type' => 'Zend\Mvc\Router\Http\Segment',
+                'options' => array(
+                  'route' => '/:id',
+                  'constraints' => array(
+                    'id' => '[0-9]*',
+                  ),
+                  'defaults' => array(
+                    'controller' => 'Althingi\Controller\Assembly',
+                    'action' => 'index'
+                  ),
+                )
+              ),
+              'list' => array(
+                'type' => 'Zend\Mvc\Router\Http\Segment',
+                'options' => array(
+                  'route' => '/list',
+                  'defaults' => array(
+                    'controller' => 'Althingi\Controller\Assembly',
+                    'action' => 'list'
+                  ),
+                )
+              ),
+              'update' => array(
+                'type' => 'Zend\Mvc\Router\Http\Segment',
+                'options' => array(
+                  'route' => '/:id/update',
+                  'constraints' => array(
+                    'id' => '[0-9]*',
+                  ),
+                  'defaults' => array(
+                    'controller' => 'Althingi\Controller\Assembly',
+                    'action' => 'update'
+                  ),
+                )
+              ),
+            ),
+          ),
         ),
     ),
     'service_manager' => array(
@@ -48,6 +97,7 @@ return array(
     ),
     'controllers' => array(
         'invokables' => array(
+            'Althingi\Controller\Assembly' => 'Althingi\Controller\AssemblyController',
             'Althingi\Controller\Index' => 'Althingi\Controller\IndexController',
         ),
     ),

@@ -2,17 +2,16 @@
 /**
  * Created by PhpStorm.
  * User: drupalviking
- * Date: 21/05/15
- * Time: 11:17
+ * Date: 31/05/15
+ * Time: 15:25
  */
 namespace Althingi\Service;
 
-use Mockery\CountValidator\Exception;
 use PDOException;
 use Althingi\Lib\DataSourceAwareInterface;
+use Althingi\Service\DatabaseService;
 
-
-class Assembly implements DataSourceAwareInterface{
+class Person implements DataSourceAwareInterface{
   use DatabaseService;
 
   /**
@@ -21,62 +20,53 @@ class Assembly implements DataSourceAwareInterface{
   private $pdo;
 
   /**
-   * Gets one condition by id
+   * Gets one Person item
    *
    * @param $id
    * @return bool|mixed
+   * @throws \Althingi\Service\Exception
    */
-  public function get($id){
-    try{
+  public function get($id) {
+    try {
       $statement = $this->pdo->prepare("
-        SELECT * FROM `Assembly`
-        WHERE id = :id
+          SELECT * FROM Person
+          WHERE id = :id
       ");
-
       $statement->execute(array(
-        'id' => (int)$id
+        'id' => $id
       ));
+      $person = $statement->fetchObject();
 
-      $condition = $statement->fetchObject();
-
-      if(!$condition){
-        return false;
+      if (!$person) {
+        return FALSE;
       }
 
-      return $condition;
+      return $person;
     }
-    catch( PDOException $e ){
-      //echo "<pre>";
-      //print_r($e->getMessage());
-      throw new Exception("Can't get Assembly item [{$id}]", 0, $e);
+    catch (PDOException $e) {
+      throw new Exception("Can't get person item. Person:[{$id}]", 0, $e);
     }
   }
 
-  /**
-   * Gets all conditions
-   *
-   * @return array
-   */
-  public function fetchAll(){
-    try{
+  public function fetchAll() {
+    try {
       $statement = $this->pdo->prepare("
-        SELECT * FROM `Assembly`
-        ORDER BY id DESC;
-      ");
-
+					SELECT * FROM `Person` P
+					ORDER BY P.name ASC
+				");
       $statement->execute();
 
-      return $statement->fetchAll();
-    }
-    catch( PDOException $e){
-      echo $e->getMessage();
-      throw new Exception("Can't get Assemblies");
+      return array_map(function ($i) use ($statement) {
+        return $i;
+      }, $statement->fetchAll());
+    } catch (PDOException $e) {
+      throw new Exception("Can't get Persons.", 0, $e);
     }
   }
 
   public function create(array $data){
     try{
-      $insertString = $this->insertString('Assembly',$data);
+      $insertString = $this->insertString('Person',$data);
       $statement = $this->pdo->prepare($insertString);
       $statement->execute($data);
       $id = (int)$this->pdo->lastInsertId();
@@ -87,13 +77,13 @@ class Assembly implements DataSourceAwareInterface{
       echo "<pre>";
       print_r($e->getMessage());
       echo "</pre>";
-      throw new Exception("Can't create airline entry",0,$e);
+      throw new Exception("Can't create person entry",0,$e);
     }
   }
 
   public function update($id, array $data){
     try{
-      $updateString = $this->updateString('Assembly',$data, "id={$id}");
+      $updateString = $this->updateString('Person',$data, "id={$id}");
       $statement = $this->pdo->prepare($updateString);
       $statement->execute($data);
       $data['id'] = $id;
@@ -103,15 +93,14 @@ class Assembly implements DataSourceAwareInterface{
       echo "<pre>";
       print_r($e->getMessage());
       echo "</pre>";
-      throw new Exception("Can't update assembly entry",0,$e);
+      throw new Exception("Can't update person entry",0,$e);
     }
   }
 
   /**
-   * Sets the Datasource
-   *
+   * Sets the datasource
    * @param \PDO $pdo
-   * @return null
+   * @return null;
    */
   public function setDataSource(\PDO $pdo){
     $this->pdo = $pdo;

@@ -74,7 +74,10 @@ class Module
 				},
 			),
 			'invokables' => [
-				//'Althingi\Service\News' 		=> 'Althingi\Service\News',
+				'Althingi\Service\Assembly' 		=> 'Althingi\Service\Assembly',
+				'Althingi\Service\Issue' 		=> 'Althingi\Service\Issue',
+				'Althingi\Service\Person' 		=> 'Althingi\Service\Person',
+				'Althingi\Service\XMLFeed' 		=> 'Althingi\Service\XMLFeed',
 			],
 			'factories' => array(
 				'Logger' => function ($sm) {

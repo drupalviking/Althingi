@@ -7,12 +7,11 @@
  */
 namespace Althingi\Service;
 
-use Mockery\CountValidator\Exception;
 use PDOException;
 use Althingi\Lib\DataSourceAwareInterface;
 
 
-class Assembly implements DataSourceAwareInterface{
+class Committee implements DataSourceAwareInterface{
   use DatabaseService;
 
   /**
@@ -21,15 +20,16 @@ class Assembly implements DataSourceAwareInterface{
   private $pdo;
 
   /**
-   * Gets one condition by id
+   * Gets one Committee by id
    *
    * @param $id
    * @return bool|mixed
+   * @throws Exception
    */
   public function get($id){
     try{
       $statement = $this->pdo->prepare("
-        SELECT * FROM `Assembly`
+        SELECT * FROM `Committee`
         WHERE id = :id
       ");
 
@@ -48,7 +48,7 @@ class Assembly implements DataSourceAwareInterface{
     catch( PDOException $e ){
       //echo "<pre>";
       //print_r($e->getMessage());
-      throw new Exception("Can't get Assembly item [{$id}]", 0, $e);
+      throw new Exception("Can't get Committee item [{$id}]", 0, $e);
     }
   }
 
@@ -56,11 +56,12 @@ class Assembly implements DataSourceAwareInterface{
    * Gets all conditions
    *
    * @return array
+   * @throws Exception
    */
   public function fetchAll(){
     try{
       $statement = $this->pdo->prepare("
-        SELECT * FROM `Assembly`
+        SELECT * FROM `Committee`
         ORDER BY id DESC;
       ");
 
@@ -70,13 +71,13 @@ class Assembly implements DataSourceAwareInterface{
     }
     catch( PDOException $e){
       echo $e->getMessage();
-      throw new Exception("Can't get Assemblies");
+      throw new Exception("Can't get Committees");
     }
   }
 
   public function create(array $data){
     try{
-      $insertString = $this->insertString('Assembly',$data);
+      $insertString = $this->insertString('Committee',$data);
       $statement = $this->pdo->prepare($insertString);
       $statement->execute($data);
       $id = (int)$this->pdo->lastInsertId();
@@ -87,13 +88,13 @@ class Assembly implements DataSourceAwareInterface{
       echo "<pre>";
       print_r($e->getMessage());
       echo "</pre>";
-      throw new Exception("Can't create airline entry",0,$e);
+      throw new Exception("Can't create committee entry",0,$e);
     }
   }
 
   public function update($id, array $data){
     try{
-      $updateString = $this->updateString('Assembly',$data, "id={$id}");
+      $updateString = $this->updateString('Committee',$data, "id={$id}");
       $statement = $this->pdo->prepare($updateString);
       $statement->execute($data);
       $data['id'] = $id;
@@ -103,7 +104,7 @@ class Assembly implements DataSourceAwareInterface{
       echo "<pre>";
       print_r($e->getMessage());
       echo "</pre>";
-      throw new Exception("Can't update assembly entry",0,$e);
+      throw new Exception("Can't update committee entry",0,$e);
     }
   }
 

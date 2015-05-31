@@ -33,7 +33,11 @@ class IndexController extends AbstractActionController
         //SERVICES
         //  load all services
         $sm = $this->getServiceLocator();
-
-
+        $assemblyService = $sm->get("Althingi\Service\Assembly");
+        //$assemblies = $assemblyService->get($this->params()->fromRoute('id'));
+        $xmlService = $sm->get("Althingi\Service\XMLFeed");
+        $data = $xmlService->processAssemblyPersons(141);
+        $assemblies = $assemblyService->fetchAll();
+        return new ViewModel(["assemblies" => $assemblies]);
     }
 }

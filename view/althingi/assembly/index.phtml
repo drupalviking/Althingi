@@ -1,0 +1,30 @@
+<?php
+/**
+ * Created by PhpStorm.
+ * User: drupalviking
+ * Date: 26/05/15
+ * Time: 20:38
+ */
+?>
+<h1><?=$this->assembly->id; ?>. Löggjafarþing Íslands</h1>
+<p>Lögð voru fram <?=sizeof($this->issues); ?> mál á þessu þingi.</p>
+<table>
+  <thead>
+    <tr>
+      <td>Þingmál</td>
+      <td>Heiti</td>
+      <td>Tegund</td>
+      <td>Tag</td>
+    </tr>
+  </thead>
+  <tbody>
+    <?php foreach($this->issues as $issue) : ?>
+      <tr>
+        <td><?=$issue->issue_id . "/" . $issue->assembly_id; ?></td>
+        <td><?=ucfirst($issue->name); ?></td>
+        <td><?=$issue->type_name; ?></td>
+        <td><?=$issue->tag; ?></td>
+      </tr>
+    <?php endforeach; ?>
+  </tbody>
+</table>

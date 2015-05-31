@@ -7,12 +7,11 @@
  */
 namespace Althingi\Service;
 
-use Mockery\CountValidator\Exception;
 use PDOException;
 use Althingi\Lib\DataSourceAwareInterface;
 
 
-class Assembly implements DataSourceAwareInterface{
+class Cv implements DataSourceAwareInterface{
   use DatabaseService;
 
   /**
@@ -21,20 +20,21 @@ class Assembly implements DataSourceAwareInterface{
   private $pdo;
 
   /**
-   * Gets one condition by id
+   * Gets one CV by id
    *
    * @param $id
    * @return bool|mixed
+   * @throws Exception
    */
-  public function get($id){
+  public function get($person_id){
     try{
       $statement = $this->pdo->prepare("
-        SELECT * FROM `Assembly`
+        SELECT * FROM `CV`
         WHERE id = :id
       ");
 
       $statement->execute(array(
-        'id' => (int)$id
+        'person_id' => (int)$person_id
       ));
 
       $condition = $statement->fetchObject();
@@ -48,20 +48,21 @@ class Assembly implements DataSourceAwareInterface{
     catch( PDOException $e ){
       //echo "<pre>";
       //print_r($e->getMessage());
-      throw new Exception("Can't get Assembly item [{$id}]", 0, $e);
+      throw new Exception("Can't get CV item [{$person_id}]", 0, $e);
     }
   }
 
   /**
-   * Gets all conditions
+   * Gets all cv's
    *
    * @return array
+   * @throws Exception
    */
   public function fetchAll(){
     try{
       $statement = $this->pdo->prepare("
-        SELECT * FROM `Assembly`
-        ORDER BY id DESC;
+        SELECT * FROM `CV`
+        ORDER BY person_id;
       ");
 
       $statement->execute();
@@ -70,40 +71,37 @@ class Assembly implements DataSourceAwareInterface{
     }
     catch( PDOException $e){
       echo $e->getMessage();
-      throw new Exception("Can't get Assemblies");
+      throw new Exception("Can't get CV's");
     }
   }
 
   public function create(array $data){
     try{
-      $insertString = $this->insertString('Assembly',$data);
+      $insertString = $this->insertString('CV',$data);
       $statement = $this->pdo->prepare($insertString);
       $statement->execute($data);
-      $id = (int)$this->pdo->lastInsertId();
-      $data['id'] = $id;
       return $id;
     }
     catch (PDOException $e){
       echo "<pre>";
       print_r($e->getMessage());
       echo "</pre>";
-      throw new Exception("Can't create airline entry",0,$e);
+      throw new Exception("Can't create CV entry",0,$e);
     }
   }
 
-  public function update($id, array $data){
+  public function update($person_id, array $data){
     try{
-      $updateString = $this->updateString('Assembly',$data, "id={$id}");
+      $updateString = $this->updateString('CV',$data, "id={$person_id}");
       $statement = $this->pdo->prepare($updateString);
       $statement->execute($data);
-      $data['id'] = $id;
       return $statement->rowCount();
     }
     catch (PDOException $e){
       echo "<pre>";
       print_r($e->getMessage());
       echo "</pre>";
-      throw new Exception("Can't update assembly entry",0,$e);
+      throw new Exception("Can't update committee entry",0,$e);
     }
   }
 
