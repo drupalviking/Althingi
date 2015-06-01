@@ -10,7 +10,7 @@ namespace Althingi\Service;
 use PDOException;
 use Althingi\Lib\DataSourceAwareInterface;
 
-class CommitteePerson implements DataSourceAwareInterface{
+class CommiteePerson implements DataSourceAwareInterface{
   use DatabaseService;
 
   /**
@@ -18,20 +18,20 @@ class CommitteePerson implements DataSourceAwareInterface{
    */
   private $pdo;
 
-  public function getWithDetailedInfo($committee_id, $person_id, $title, $from, $assembly_id) {
+  public function getWithDetailedInfo($commitee_id, $person_id, $title, $from, $assembly_id) {
     try {
       $statement = $this->pdo->prepare("
-					SELECT * FROM `Committee_has_Person` CP
-					WHERE committee_id = :committee_id
+					SELECT * FROM `Commitee_has_Person` CP
+					WHERE commitee_id = :commitee_id
 					AND person_id = :person_id
-					AND `title` = :committee_title
+					AND `title` = :commitee_title
 					AND `from` = :date_from
 					AND `assembly_id` = :assembly_id
 				");
       $statement->execute(array(
-        'committee_id' => $committee_id,
+        'commitee_id' => $commitee_id,
         'person_id' => $person_id,
-        'committee_title' => $title,
+        'commitee_title' => $title,
         'date_from' => $from,
         'assembly_id' => $assembly_id,
       ));
@@ -45,18 +45,19 @@ class CommitteePerson implements DataSourceAwareInterface{
       return $committee;
     }
     catch (PDOException $e) {
+      echo "<pre>";
+      print_r($e->getMessage());
+      echo "</pre>";
       throw new Exception("Can't get item.", 0, $e);
     }
   }
 
   public function create(array $data){
     try{
-      $insertString = $this->insertString('Committee_has_Person',$data);
+      $insertString = $this->insertString('Commitee_has_Person',$data);
       $statement = $this->pdo->prepare($insertString);
       $statement->execute($data);
-      $id = (int)$this->pdo->lastInsertId();
-      $data['id'] = $id;
-      return $id;
+      return;
     }
     catch (PDOException $e){
       echo "<pre>";
@@ -66,12 +67,18 @@ class CommitteePerson implements DataSourceAwareInterface{
     }
   }
 
-  public function update($id, array $data){
+  public function update(array $data){
     try{
-      $updateString = $this->updateString('Committee_has_Person',$data, "id={$id}");
+      $updateString = $this->updateString(
+        'Commitee_has_Person',
+        $data,
+        "commitee_id={$data['commitee_id']} AND
+        person_id = {$data['person_id']} AND
+        title = \"{$data['title']}\" AND
+        `from` = \"{$data['from']}\" AND
+        assembly_id = {$data['assembly_id']}");
       $statement = $this->pdo->prepare($updateString);
       $statement->execute($data);
-      $data['id'] = $id;
       return $statement->rowCount();
     }
     catch (PDOException $e){

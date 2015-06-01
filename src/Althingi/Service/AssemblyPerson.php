@@ -50,13 +50,25 @@ class AssemblyPerson implements DataSourceAwareInterface{
 
   public function getWithDetailedInfo($assembly_id, $person_id, $from, $to) {
     try {
-      $statement = $this->pdo->prepare("
+      if(is_null($to)){
+        $statement = $this->pdo->prepare("
+					SELECT * FROM `Assembly_has_Person` AP
+					WHERE assembly_id = :assembly_id
+					AND person_id = :person_id
+					AND `from` = :date_from
+					AND `to` IS :date_to
+				");
+      }
+      else{
+        $statement = $this->pdo->prepare("
 					SELECT * FROM `Assembly_has_Person` AP
 					WHERE assembly_id = :assembly_id
 					AND person_id = :person_id
 					AND `from` = :date_from
 					AND `to` = :date_to
 				");
+      }
+
       $statement->execute(array(
         'assembly_id' => $assembly_id,
         'person_id' => $person_id,
@@ -90,7 +102,7 @@ class AssemblyPerson implements DataSourceAwareInterface{
       echo "<pre>";
       print_r($e->getMessage());
       echo "</pre>";
-      throw new Exception("Can't create entry",0,$e);
+      throw new Exception("Can't create entry: {$data}",0,$e);
     }
   }
 

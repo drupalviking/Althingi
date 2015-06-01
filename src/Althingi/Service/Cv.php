@@ -30,7 +30,7 @@ class Cv implements DataSourceAwareInterface{
     try{
       $statement = $this->pdo->prepare("
         SELECT * FROM `CV`
-        WHERE id = :id
+        WHERE person_id = :person_id
       ");
 
       $statement->execute(array(
@@ -80,19 +80,20 @@ class Cv implements DataSourceAwareInterface{
       $insertString = $this->insertString('CV',$data);
       $statement = $this->pdo->prepare($insertString);
       $statement->execute($data);
-      return $id;
+      return;
     }
     catch (PDOException $e){
       echo "<pre>";
       print_r($e->getMessage());
+      print_r($data);
       echo "</pre>";
-      throw new Exception("Can't create CV entry",0,$e);
+      throw new Exception("Can't create CV entry}",0,$e);
     }
   }
 
   public function update($person_id, array $data){
     try{
-      $updateString = $this->updateString('CV',$data, "id={$person_id}");
+      $updateString = $this->updateString('CV',$data, "person_id={$person_id}");
       $statement = $this->pdo->prepare($updateString);
       $statement->execute($data);
       return $statement->rowCount();
@@ -101,7 +102,7 @@ class Cv implements DataSourceAwareInterface{
       echo "<pre>";
       print_r($e->getMessage());
       echo "</pre>";
-      throw new Exception("Can't update committee entry",0,$e);
+      throw new Exception("Can't update CV entry",0,$e);
     }
   }
 

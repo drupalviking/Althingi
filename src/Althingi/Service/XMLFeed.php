@@ -81,23 +81,36 @@ class XMLFeed implements DataSourceAwareInterface{
     return $obj;
   }
 
+  public function processAssemblyIssues($assemblyId){
+    $issuesObject = $this->getFromXml("http://www.althingi.is/altext/xml/thingmalalisti/?lthing=" . $assemblyId);
+    $issueService = new Issue();
+    $issueService->setDataSource($this->pdo);
+    foreach($issuesObject->mál as $issueOverview){
+      $a = 10;
+
+
+    }
+  }
+
   public function processAssemblyPersons($assemblyId){
     $personsObject = $this->getAssemblyPersonsFromXml($assemblyId);
     $personService = new Person();
     $personService->setDataSource($this->pdo);
     foreach($personsObject->þingmaður as $persons){
       $idPerson = $persons->{'@attributes'}->id;
-      //$this->processPerson($persons);
+      $this->processPerson($persons);
       $assemblySeats = $this->getFromXml($persons->xml->þingseta);
-      //$this->processAssemblySeatsForPerson($assemblySeats);
+      $this->processAssemblySeatsForPerson($assemblySeats);
       $cv = $this->getFromXml($persons->xml->lífshlaup);
-      //$this->processCvForPerson($cv);
+      $this->processCvForPerson($cv);
       $interests = $this->getFromXml($persons->xml->hagsmunir);
-      if(isset($interests->hagsmunaskráning)){
-        //$this->processInterestsForPerson($interests->hagsmunaskráning);
+      if(isset($interests->hagsmunaskráning->launuðstjórnarseta)){
+        $this->processInterestsForPerson($idPerson, $interests->hagsmunaskráning);
       }
-      $comitties = $this->getFromXml($persons->xml->nefndaseta);
-      $this->processCommittiesForPerson($comitties);
+      $committies = $this->getFromXml($persons->xml->nefndaseta);
+      if(isset($committies->nefndasetur->nefndaseta)){
+        $this->processCommittiesForPerson($committies);
+      }
     }
   }
 
@@ -106,6 +119,7 @@ class XMLFeed implements DataSourceAwareInterface{
     $personService->setDataSource($this->pdo);
     $personFromDatabase = $personService->get($person->{'@attributes'}->id);
 
+    $data['id'] = $person->{'@attributes'}->id;
     $data['name'] = $person->nafn;
     $data['abbr'] = (isset($person->skammstöfun)) ? $person->skammstöfun : null;
     $data['dob'] = (isset($person->fæðingardagur)) ? strftime('%Y-%m-%d', strtotime($person->fæðingardagur)) : null;
@@ -122,53 +136,216 @@ class XMLFeed implements DataSourceAwareInterface{
     }
   }
 
+  /**
+   * Takes the CV from the datastream, clears the data and stores it in the database.
+   *
+   * @param $cv
+   */
   public function processCvForPerson($cv){
+    $cvService = new Cv();
+    $cvService->setDataSource($this->pdo);
+    $dataFromDatabase = $cvService->get($cv->{'@attributes'}->id);
+
     $data = array();
-    $data['family'] = (isset($cv->lífshlaup->fjölskylda)) ? $cv->lífshlaup->fjölskylda : null;
-    $data['education'] = (isset($cv->lífshlaup->menntun)) ? $cv->lífshlaup->menntun : null;
-    $data['carreer'] = (isset($cv->lífshlaup->starfsferill)) ? $cv->lífshlaup->starfsferill : null;
-    $data['social'] = (isset($cv->lífshlaup->félagsmál)) ? $cv->lífshlaup->félagsmál : null;
-    $data['parliamentary'] = (isset($cv->lífshlaup->þingmennska)) ? $cv->lífshlaup->þingmennska : null;
-    $data['substitue'] = (isset($cv->lífshlaup->varaþingmennska)) ? $cv->lífshlaup->varaþingmennska : null;
-    $data['minister'] = (isset($cv->lífshlaup->ráðherra)) ? $cv->lífshlaup->fjölskylda : null;
-    $data['speaker'] = (isset($cv->lífshlaup->þingforseti)) ? $cv->lífshlaup->þingforseti : null;
-    $data['persidency'] = (isset($cv->lífshlaup->þingflokksformennska)) ? $cv->lífshlaup->þingflokksformennska : null;
-    $data['committee'] = (isset($cv->lífshlaup->nefndaseta)) ? $cv->lífshlaup->nefndaseta : null;
-    $data['international_comitee'] = (isset($cv->lífshlaup->alþjóðanefndaseta)) ? $cv->lífshlaup->alþjóðanefndaseta : null;
-    $data['writing'] = (isset($cv->lífshlaup->ritstörf)) ? $cv->lífshlaup->ritstörf : null;
-    $data['editor'] = (isset($cv->lífshlaup->ritstjórn)) ? $cv->lífshlaup->ritstjórn : null;
+    $data['person_id'] = $cv->{'@attributes'}->id;
+    $data['family'] = (is_string($cv->lífshlaup->fjölskylda)) ? $cv->lífshlaup->fjölskylda : null;
+    $data['education'] = (is_string($cv->lífshlaup->menntun)) ? $cv->lífshlaup->menntun : null;
+    $data['career'] = (is_string($cv->lífshlaup->starfsferill)) ? $cv->lífshlaup->starfsferill : null;
+    $data['social'] = (is_string($cv->lífshlaup->félagsmál)) ? $cv->lífshlaup->félagsmál : null;
+    $data['parliamentary'] = (is_string($cv->lífshlaup->þingmennska)) ? $cv->lífshlaup->þingmennska : null;
+    $data['substitute'] = (is_string($cv->lífshlaup->varaþingmennska)) ? $cv->lífshlaup->varaþingmennska : null;
+    $data['minister'] = (is_string($cv->lífshlaup->ráðherra)) ? $cv->lífshlaup->fjölskylda : null;
+    $data['speaker'] = (is_string($cv->lífshlaup->þingforseti)) ? $cv->lífshlaup->þingforseti : null;
+    $data['presidency'] = (is_string($cv->lífshlaup->þingflokksformennska)) ? $cv->lífshlaup->þingflokksformennska : null;
+    $data['committee'] = (is_string($cv->lífshlaup->nefndaseta)) ? $cv->lífshlaup->nefndaseta : null;
+    $data['international_committee'] = (is_string($cv->lífshlaup->alþjóðanefndaseta)) ? $cv->lífshlaup->alþjóðanefndaseta : null;
+    $data['writing'] = (is_string($cv->lífshlaup->ritstörf)) ? $cv->lífshlaup->ritstörf : null;
+    $data['editor'] = (is_string($cv->lífshlaup->ritstjórn)) ? $cv->lífshlaup->ritstjórn : null;
     $data['hash'] = null;
+
+    if($dataFromDatabase){
+      $cvService->update($cv->{'@attributes'}->id, $data);
+    }
+    else{
+      $cvService->create($data);
+    }
   }
 
-  public function processInterestsForPerson($interests){
+  public function processInterestsForPerson($idPerson, $interests){
+    $interestsService = new Interests();
+    $interestsService->setDataSource($this->pdo);
+    $dataFromDatabase = $interestsService->get($idPerson);
+
     $data = array();
-    $data['sallariedBoard'] = (isset($interests->launuðstjórnarseta)) ? $interests->launuðstjórnarseta->svar : null;
-    $data['paidEmployment'] = (isset($interests->launaðstarf)) ? $interests->launaðstarf : null;
-    $data['incomeGeneratingActivities'] = (isset($interests->tekjumyndandistarfsemi)) ? $interests->tekjumyndandistarfsemi : null;
-    $data['financialSupport'] = (isset($interests->fjárhagslegurstuðningur)) ? $interests->fjárhagslegurstuðningur : null;
-    $data['gifts'] = (isset($interests->gjafir)) ? $interests->gjafir : null;
-    $data['trips'] = (isset($interests->ferðir)) ? $interests->ferðir : null;
-    $data['debtReduction'] = (isset($interests->eftirgjöfskulda)) ? $interests->eftirgjöfskulda : null;
-    $data['realEstate'] = (isset($interests->fasteignir)) ? $interests->fasteignir : null;
-    $data['assets'] = (isset($interests->eignir)) ? $interests->eignir : null;
-    $data['formerEmployer'] = (isset($interests->fyrrverandivinnuveitandi)) ? $interests->fyrrverandivinnuveitandi : null;
-    $data['futureEmployer'] = (isset($interests->framtíðarvinnuveitandi)) ? $interests->framtíðarvinnuveitandi : null;
-    $data['trust'] = (isset($interests->trúnaðarstörf)) ? $interests->trúnaðarstörf : null;
-    $data['logged'] = (isset($interests->skráð)) ? strftime('%Y-%m-%d', strtotime($interests->skráð)) : null;
+    $data['person_id'] = $idPerson;
+    if(isset($interests->launuðstjórnarseta)){
+      if(isset($interests->launuðstjórnarseta->svar)){
+        if(is_string($interests->launuðstjórnarseta->svar)){
+          $data['salariedBoard'] = $interests->launuðstjórnarseta->svar;
+        }
+
+      }
+      else{
+        $data['salariedBoard'] = null;
+      }
+    }
+    if(isset($interests->launaðstarf)){
+      if(isset($interests->launaðstarf->svar)){
+        if(is_string($interests->launaðstarf->svar)){
+          $data['paidEmployment'] = $interests->launaðstarf->svar;
+        }
+      }
+      else{
+        $data['paidEmployment'] = null;
+      }
+    }
+    if(isset($interests->tekjumyndandistarfsemi)){
+      if(isset($interests->tekjumyndandistarfsemi->svar)){
+        if(is_string($interests->tekjumyndandistarfsemi->svar)){
+          $data['incomeGeneratingActivities'] = $interests->tekjumyndandistarfsemi->svar;
+        }
+      }
+      else{
+        $data['incomeGeneratingActivities'] = null;
+      }
+    }
+    if(isset($interests->fjárhagslegurstuðningur)){
+      if(isset($interests->fjárhagslegurstuðningur->svar)){
+        if(is_string($interests->fjárhagslegurstuðningur->svar)){
+          $data['financialSupport'] = $interests->fjárhagslegurstuðningur->svar;
+        }
+      }
+      else{
+        $data['financialSupport'] = null;
+      }
+    }
+    if(isset($interests->gjafir)){
+      if(isset($interests->gjafir->svar)){
+        if(is_string($interests->gjafir->svar)){
+          $data['gifts'] = $interests->gjafir->svar;
+        }
+      }
+      else{
+        $data['gifts'] = null;
+      }
+    }
+    if(isset($interests->ferðir)){
+      if(isset($interests->ferðir->svar)){
+        if(is_string($interests->ferðir->svar)){
+          $data['trips'] = $interests->ferðir->svar;
+        }
+      }
+      else{
+        $data['trips'] = null;
+      }
+    }
+    if(isset($interests->eftirgjöfskulda)){
+      if(isset($interests->eftirgjöfskulda->svar)){
+        if(is_string($interests->eftirgjöfskulda->svar)){
+          $data['debtReduction'] = $interests->eftirgjöfskulda->svar;
+        }
+      }
+      else{
+        $data['debtReduction'] = null;
+      }
+    }
+    if(isset($interests->fasteignir)){
+      if(isset($interests->fasteignir->svar)){
+        if(is_string($interests->fasteignir->svar)){
+          $data['realEstate'] = $interests->fasteignir->svar;
+        }
+      }
+      else{
+        $data['realEstate'] = null;
+      }
+    }
+    if(isset($interests->eignir)){
+      if(isset($interests->eignir->svar)){
+        if(is_string($interests->eignir->svar)){
+          $data['assets'] = $interests->eignir->svar;
+        }
+      }
+      else{
+        $data['assets'] = null;
+      }
+    }
+    if(isset($interests->fyrrverandivinnuveitandi)){
+      if(isset($interests->fyrrverandivinnuveitandi->svar)){
+        if(is_string($interests->fyrrverandivinnuveitandi->svar)){
+          $data['formerEmployer'] = $interests->fyrrverandivinnuveitandi->svar;
+        }
+      }
+      else{
+        $data['formerEmployer'] = null;
+      }
+    }
+    if(isset($interests->framtíðarvinnuveitandi)){
+      if(isset($interests->framtíðarvinnuveitandi->svar)){
+        if(is_string($interests->framtíðarvinnuveitandi->svar)){
+          $data['futureEmployer'] = $interests->framtíðarvinnuveitandi->svar;
+        }
+      }
+      else{
+        $data['futureEmployer'] = null;
+      }
+    }
+    if(isset($interests->trúnaðarstörf)){
+      if(isset($interests->trúnaðarstörf->svar)){
+        if(is_string($interests->trúnaðarstörf->svar)){
+          $data['trust'] = $interests->trúnaðarstörf->svar;
+        }
+      }
+      else{
+        $data['trust'] = null;
+      }
+    }
+    if(isset($interests->skráð)){
+      $data['logged'] = strftime('%Y-%m-%d', strtotime($interests->skráð));
+    }
+
+    if($dataFromDatabase){
+      $interestsService->update($idPerson, $data);
+    }
+    else{
+      $interestsService->create($data);
+    }
   }
 
-  public function processCommittiesForPerson($comitties){
+  public function processCommittiesForPerson($commitees){
+    $commiteePersonService = new CommiteePerson();
+    $commiteePersonService->setDataSource($this->pdo);
+    $commiteeService = new Commitee();
+    $commiteeService->setDataSource($this->pdo);
+
     //Get commiteeService in order to find the commitee
-    foreach($comitties as $commitie){
+    foreach($commitees->nefndasetur->nefndaseta as $commitee){
+      $commiteeFromDatabase = $commiteeService->getByName($commitee->nefnd);
+      $dataFromDatabase = $commiteePersonService->getWithDetailedInfo(
+        $commiteeFromDatabase->id,
+        $commitees->{"@attributes"}->id,
+        $commitee->staða,
+        strftime('%Y-%m-%d', strtotime($commitee->tímabil->inn)),
+        $commitee->þing
+      );
+
       $data = array();
-      $data['committee_id'] = null;
-      $data['person_id'] = $comitties->{"@attributes"}->id;
-      $data['title'] = $commitie->staða;
-      $data['row'] = $commitie->röð;
-      $data['from'] = strftime('%Y-%m-%d', strtotime($commitie->tímabil->inn));
-      $data['to'] = strftime('%Y-%m-%d', strtotime($commitie->tímabil->út));
-      $data['assembly_id'] = $commitie->þing;
+      $data['commitee_id'] = $commiteeFromDatabase->id;
+      $data['person_id'] = $commitees->{"@attributes"}->id;
+      $data['title'] = $commitee->staða;
+      $data['row'] = $commitee->röð;
+      $data['from'] = strftime('%Y-%m-%d', strtotime($commitee->tímabil->inn));
+      $data['to'] = (isset($commitee->tímabil->út))
+        ? strftime('%Y-%m-%d', strtotime($commitee->tímabil->út))
+        : null;
+      $data['assembly_id'] = $commitee->þing;
       $data['party'] = null;
+
+      if($dataFromDatabase){
+        $commiteePersonService->update($data);
+      }
+      else{
+        $commiteePersonService->create($data);
+      }
     }
 
   }
@@ -183,30 +360,157 @@ class XMLFeed implements DataSourceAwareInterface{
   public function processAssemblySeatsForPerson($object){
     $assemblyPersonService = new AssemblyPerson();
     $assemblyPersonService->setDataSource($this->pdo);
-    foreach($object->þingsetur->þingseta as $assembly_attendance){
+    $partyService = new Party();
+    $partyService->setDataSource($this->pdo);
+
+    if(is_array($object->þingsetur->þingseta)){
+      foreach($object->þingsetur->þingseta as $assembly_attendance) {
+        $dataFromDatabase = $assemblyPersonService->getWithDetailedInfo(
+          $assembly_attendance->þing,
+          $object->{'@attributes'}->id,
+          strftime('%Y-%m-%d', strtotime($assembly_attendance->tímabil->inn)),
+          (is_string($assembly_attendance->tímabil->út))
+            ? strftime('%Y-%m-%d', strtotime($assembly_attendance->tímabil->út))
+            : null
+        );
+
+        $partyFromDatabase = $partyService->getByName($assembly_attendance->þingflokkur);
+
+        //Create a data array with values from XML
+        $data['assembly_id'] = $assembly_attendance->þing;
+        $data['person_id'] = $object->{'@attributes'}->id;
+        $data['abbr'] = $assembly_attendance->skammstöfun;
+        $data['type'] = $assembly_attendance->tegund;
+        if(isset($assembly_attendance->deild)){
+          $data['department'] = $assembly_attendance->deild;
+        }
+        if (isset($assembly_attendance->kjördæmi->{'@attributes'})) {
+          $data['constituency_id'] = $assembly_attendance->kjördæmi->{'@attributes'}->id;
+        }
+        elseif (!is_object($assembly_attendance->kjördæmi)) {
+          $data['constituency'] = $assembly_attendance->kjördæmi;
+        }
+
+        $data['constituency_number'] = $assembly_attendance->kjördæmanúmer;
+        if(is_string($assembly_attendance->þingsalssæti)){
+          $data['seat'] = $assembly_attendance->þingsalssæti;
+        }
+
+        $data['from'] = strftime('%Y-%m-%d', strtotime($assembly_attendance->tímabil->inn));
+        (is_string($assembly_attendance->tímabil->út))
+          ? strftime('%Y-%m-%d', strtotime($assembly_attendance->tímabil->út))
+          : null;
+
+        if(!$partyFromDatabase){
+          $partyData = array();
+          $partyData['name'] = $assembly_attendance->þingflokkur;
+          $partyService->create($partyData);
+        }
+        $data['party'] = $assembly_attendance->þingflokkur;
+
+
+        if (!$dataFromDatabase) {
+          $assemblyPersonService->create($data);
+        }
+        else {
+          $assemblyPersonService->update($dataFromDatabase->id, $data);
+        }
+      }
+    }
+    else{
+      $assembly_attendance = $object->þingsetur->þingseta;
       $dataFromDatabase = $assemblyPersonService->getWithDetailedInfo(
         $assembly_attendance->þing,
         $object->{'@attributes'}->id,
         strftime('%Y-%m-%d', strtotime($assembly_attendance->tímabil->inn)),
-        strftime('%Y-%m-%d', strtotime($assembly_attendance->tímabil->út))
+        (is_string($assembly_attendance->tímabil->út))
+          ? strftime('%Y-%m-%d', strtotime($assembly_attendance->tímabil->út))
+          : null
       );
       //Create a data array with values from XML
       $data['assembly_id'] = $assembly_attendance->þing;
       $data['person_id'] = $object->{'@attributes'}->id;
       $data['abbr'] = $assembly_attendance->skammstöfun;
       $data['type'] = $assembly_attendance->tegund;
-      $data['constituency_id'] = $assembly_attendance->kjördæmi->{'@attributes'}->id;
+      if (isset($assembly_attendance->kjördæmi->{'@attributes'})) {
+        $data['constituency_id'] = $assembly_attendance->kjördæmi->{'@attributes'}->id;
+      }
+      elseif (!is_object($assembly_attendance->kjördæmi)) {
+        $data['constituency'] = $assembly_attendance->kjördæmi;
+      }
+
       $data['constituency_number'] = $assembly_attendance->kjördæmanúmer;
-      $data['seat'] = $assembly_attendance->þingsalasæti;
+      $data['seat'] = $assembly_attendance->þingsalssæti;
       $data['from'] = strftime('%Y-%m-%d', strtotime($assembly_attendance->tímabil->inn));
-      $data['to'] = strftime('%Y-%m-%d', strtotime($assembly_attendance->tímabil->út));
+      (is_string($assembly_attendance->tímabil->út))
+        ? strftime('%Y-%m-%d', strtotime($assembly_attendance->tímabil->út))
+        : null;
       $data['party'] = $assembly_attendance->þingflokkur;
 
-      if(!$dataFromDatabase){
+      if (!$dataFromDatabase) {
         $assemblyPersonService->create($data);
       }
-      else{
+      else {
         $assemblyPersonService->update($dataFromDatabase->id, $data);
+      }
+    }
+  }
+
+  /**
+   * Fetches all commitees from selected Assembly and process it into the database
+   *
+   * @param $id_assembly
+   * @throws \Althingi\Service\Exception
+   */
+  public function processCommitees($id_assembly){
+    $string = "http://www.althingi.is/altext/xml/nefndir/?lthing=" . $id_assembly;
+    $obj = $this->getFromXml($string);
+
+    $commiteeService = new Commitee();
+    $commiteeService->setDataSource($this->pdo);
+    if( isset($obj->nefnd)){
+      if(is_array($obj->nefnd)){
+        foreach( $obj->nefnd as $item ){
+          $dataFromDatabase = $commiteeService->get($item->{'@attributes'}->id);
+
+          $data = array();
+          $data['id'] = $item->{'@attributes'}->id;
+          $data['name'] = $item->heiti;
+          $data['short_abbr'] = $item->skammstafanir->stuttskammstöfun;
+          $data['long_abbr'] = $item->skammstafanir->löngskammstöfun;
+          $data['first_assembly'] = $item->tímabil->fyrstaþing;
+          if(isset($item->tímabil->síðastaþing)){
+            $data['last_assembly'] = $item->tímabil->síðastaþing;
+          }
+
+          if($dataFromDatabase){
+            $commiteeService->update($item->{'@attributes'}->id, $data);
+          }
+          else{
+            $commiteeService->create($data);
+          }
+        }
+      }
+      else{
+        $item = $obj->nefnd;
+        $dataFromDatabase = $commiteeService->get($item->{'@attributes'}->id);
+
+        $data = array();
+        $data['id'] = $item->{'@attributes'}->id;
+        $data['name'] = $item->heiti;
+        $data['short_abbr'] = $item->skammstafanir->stuttskammstöfun;
+        $data['long_abbr'] = $item->skammstafanir->löngskammstöfun;
+        $data['first_assembly'] = $item->tímabil->fyrstaþing;
+        if(isset($item->tímabil->síðastaþing)){
+          $data['last_assembly'] = $item->tímabil->síðastaþing;
+        }
+
+        if($dataFromDatabase){
+          $commiteeService->update($item->{'@attributes'}->id, $data);
+        }
+        else{
+          $commiteeService->create($data);
+        }
       }
     }
   }

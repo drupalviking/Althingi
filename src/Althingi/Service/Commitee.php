@@ -11,7 +11,7 @@ use PDOException;
 use Althingi\Lib\DataSourceAwareInterface;
 
 
-class Committee implements DataSourceAwareInterface{
+class Commitee implements DataSourceAwareInterface{
   use DatabaseService;
 
   /**
@@ -29,7 +29,7 @@ class Committee implements DataSourceAwareInterface{
   public function get($id){
     try{
       $statement = $this->pdo->prepare("
-        SELECT * FROM `Committee`
+        SELECT * FROM `Commitee`
         WHERE id = :id
       ");
 
@@ -46,14 +46,49 @@ class Committee implements DataSourceAwareInterface{
       return $condition;
     }
     catch( PDOException $e ){
-      //echo "<pre>";
-      //print_r($e->getMessage());
+      echo "<pre>";
+      print_r($e->getMessage());
+      echo "</pre>";
       throw new Exception("Can't get Committee item [{$id}]", 0, $e);
     }
   }
 
   /**
-   * Gets all conditions
+   * Gets one Committee by name
+   *
+   * @param $id
+   * @return bool|mixed
+   * @throws Exception
+   */
+  public function getByName($name){
+    try{
+      $statement = $this->pdo->prepare("
+        SELECT * FROM `Commitee`
+        WHERE `name` = :commitee_name
+      ");
+
+      $statement->execute(array(
+        'commitee_name' => $name
+      ));
+
+      $commitee = $statement->fetchObject();
+
+      if(!$commitee){
+        return false;
+      }
+
+      return $commitee;
+    }
+    catch( PDOException $e ){
+      echo "<pre>";
+      print_r($e->getMessage());
+      echo "</pre>";
+      throw new Exception("Can't get Committee item [{$name}]", 0, $e);
+    }
+  }
+
+  /**
+   * Gets all commitees
    *
    * @return array
    * @throws Exception
@@ -61,7 +96,7 @@ class Committee implements DataSourceAwareInterface{
   public function fetchAll(){
     try{
       $statement = $this->pdo->prepare("
-        SELECT * FROM `Committee`
+        SELECT * FROM `Commitee`
         ORDER BY id DESC;
       ");
 
@@ -77,7 +112,7 @@ class Committee implements DataSourceAwareInterface{
 
   public function create(array $data){
     try{
-      $insertString = $this->insertString('Committee',$data);
+      $insertString = $this->insertString('Commitee',$data);
       $statement = $this->pdo->prepare($insertString);
       $statement->execute($data);
       $id = (int)$this->pdo->lastInsertId();
@@ -94,7 +129,7 @@ class Committee implements DataSourceAwareInterface{
 
   public function update($id, array $data){
     try{
-      $updateString = $this->updateString('Committee',$data, "id={$id}");
+      $updateString = $this->updateString('Commitee',$data, "id={$id}");
       $statement = $this->pdo->prepare($updateString);
       $statement->execute($data);
       $data['id'] = $id;

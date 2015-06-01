@@ -70,7 +70,6 @@ class Person implements DataSourceAwareInterface{
       $statement = $this->pdo->prepare($insertString);
       $statement->execute($data);
       $id = (int)$this->pdo->lastInsertId();
-      $data['id'] = $id;
       return $id;
     }
     catch (PDOException $e){

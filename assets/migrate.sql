@@ -1,0 +1,10 @@
+ALTER TABLE `althingi`.`Assembly` ADD COLUMN `period` VARCHAR(100) NULL  AFTER `to` ;
+ALTER TABLE `althingi`.`Assembly` CHANGE COLUMN `to` `to` DATE NULL DEFAULT NULL  ;
+UPDATE Assembly SET dirty = 0;
+ALTER TABLE `althingi`.`Assembly_has_Person` ADD COLUMN `constituency_id` INT(11) NULL DEFAULT NULL  AFTER `type` ;
+ALTER TABLE `althingi`.`Assembly_has_Person` ADD COLUMN `constituency_number` INT(11) NULL DEFAULT NULL  AFTER `constituency` ;
+ALTER TABLE `althingi`.`Person` ADD COLUMN `abbr` VARCHAR(20) NULL DEFAULT NULL  AFTER `name` , ADD COLUMN `dob` DATE NULL DEFAULT NULL  AFTER `abbr` ;
+ALTER TABLE `althingi`.`Person` ADD COLUMN `website` VARCHAR(255) NULL DEFAULT NULL  AFTER `dob` ;
+ALTER TABLE `althingi`.`Person` ADD COLUMN `facebook` VARCHAR(255) NULL DEFAULT NULL  AFTER `website` , ADD COLUMN `twitter` VARCHAR(255) NULL DEFAULT NULL  AFTER `facebook` , ADD COLUMN `blogg` VARCHAR(255) NULL DEFAULT NULL  AFTER `twitter` ;
+ALTER TABLE `althingi`.`Commitee` DROP COLUMN `description` , ADD COLUMN `short_abbr` VARCHAR(45) NULL DEFAULT NULL  AFTER `name` , ADD COLUMN `long_abbr` VARCHAR(45) NULL DEFAULT NULL  AFTER `short_abbr` , ADD COLUMN `first_assembly` INT(11) NULL DEFAULT NULL  AFTER `long_abbr` , ADD COLUMN `last_assembly` INT(11) NULL DEFAULT NULL  AFTER `first_assembly` ;
+ALTER TABLE `althingi`.`Issue` ADD COLUMN `issue_analysis` VARCHAR(1000) NULL DEFAULT NULL  AFTER `tag` , ADD COLUMN `category` VARCHAR(45) NULL DEFAULT NULL  AFTER `issue_analysis` ;
