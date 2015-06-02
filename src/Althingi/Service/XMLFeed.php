@@ -200,6 +200,8 @@ class XMLFeed implements DataSourceAwareInterface{
     $issueService->setDataSource($this->pdo);
     $issueVoteService = new IssueVote();
     $issueVoteService->setDataSource($this->pdo);
+    $commiteeService = new Commitee();
+    $commiteeService->setDataSource($this->pdo);
 
     if(is_array($votes->atkvæðagreiðsla)) {
       $issue = $issueService->getByIssueAndAssembly(
@@ -207,12 +209,46 @@ class XMLFeed implements DataSourceAwareInterface{
       );
 
       foreach ($votes->atkvæðagreiðsla as $vote) {
+        $voteFromDatabase = $issueVoteService->get($vote->{'@attributes'}->atkvæðagreiðslunúmer);
 
+        $data = array();
+        $data['id'] = $vote->{'@attributes'}->atkvæðagreiðslunúmer;
+        $data['issue_id'] = $issue->id;
+        $data['time'] = strftime('%Y-%m-%d', strtotime($vote->tími));
+        $data['time_epoch'] = strtotime($vote->tími);
+        $data['progress_type'] = $vote->tegund;
+        $data['vote_type'] = $vote->samantekt->aðferð;
+        $data['more'] = (is_string($vote->nánar)) ? $vote->nánar : null;
+
+        //If the Issue is sent to a Commitee, get the commitee id
+        if(isset($vote->til)){
+          $commitee = $commiteeService->getByName($vote->til);
+          $data['commitee_id'] = $commitee->id;
+          $data['commitee'] = $vote->til;
+        }
+
+        if($vote->samantekt->aðferð == 'atkvæðagreiðslukerfi'){
+          $data['yes'] = $vote->samantekt->já->fjöldi;
+          $data['no'] = $vote->samantekt->nei->fjöldi;
+          $data['abstrained'] = $vote->samantekt->sátuhjá->fjöldi;
+          $data['result'] = $vote->samantekt->afgreiðsla;
+
+          //Need to process each vote!!!!!
+        }
+
+        $data['document_id'] = $vote->þingskjal->{'@attributes'}->skjalsnúmer;
+        $data['assembly_id'] = $vote->þingskjal->{'@attributes'}->þingnúmer;
+
+        if($voteFromDatabase){
+          $issueVoteService->update($vote->{'@attributes'}->atkvæðagreiðslunúmer, $data);
+        }
+        else{
+          $issueVoteService->create($data);
+        }
       }
     }
     else{
-
-
+      
     }
   }
 
