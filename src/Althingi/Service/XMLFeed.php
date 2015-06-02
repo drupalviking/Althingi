@@ -86,9 +86,7 @@ class XMLFeed implements DataSourceAwareInterface{
     $issueService = new Issue();
     $issueService->setDataSource($this->pdo);
     foreach($issuesObject->mál as $issueOverview){
-      $a = 10;
-
-
+      $this->processAdditionalIssueMatters($issueOverview);
     }
   }
 
@@ -112,6 +110,122 @@ class XMLFeed implements DataSourceAwareInterface{
         $this->processCommittiesForPerson($committies);
       }
     }
+  }
+
+  public function processIssue($issueOverview, $issue){
+    $issueService = new Issue();
+    $issueService->setDataSource($this->pdo);
+    $issueFromDatabase = $issueService->getByIssueAndAssembly(
+      $issueOverview->{'@attributes'}->málsnúmer, $issueOverview->{'@attributes'}->þingnúmer
+    );
+
+
+    $data['issue_id'] = $issueOverview->{'@attributes'}->málsnúmer;
+    $data['assembly_id'] = $issueOverview->{'@attributes'}->þingnúmer;
+    $data['name'] = $issueOverview->málsheiti;
+    $data['type'] = $issueOverview->málstegund->{'@attributes'}->málstegund;
+    $data['type_name'] = $issueOverview->málstegund->heiti;
+    $data['tag'] = $issueOverview->málstegund->heiti2;
+    $data['issue_analysis'] = (is_string($issueOverview->efnisgreining)) ? $issueOverview->efnisgreining : null;
+    $data['category'] = $issueOverview->{'@attributes'}->málsflokkur;
+    $data['status'] = $issue->staðamáls;
+
+    if($issueFromDatabase){
+      $issueService->update($issueFromDatabase->id, $data);
+    }
+    else{
+      $issueService->create($data);
+    }
+  }
+
+  public function processIssueDocuments($documents){
+    $issueService = new Issue();
+    $issueService->setDataSource($this->pdo);
+    $issueDocumentService = new IssueDocument();
+    $issueDocumentService->setDataSource($this->pdo);
+
+    if(is_array($documents->þingskjal)){
+      $issue = $issueService->getByIssueAndAssembly(
+        $documents->þingskjal[0]->{'@attributes'}->málsnúmer, $documents->þingskjal[0]->{'@attributes'}->þingnúmer
+      );
+
+      foreach($documents->þingskjal as $document) {
+        $documentFromDatabase = $issueDocumentService->getByIssueIdAndDate($issue->id, $document->útbýting);
+
+        $data['issue_id'] = $issue->id;
+        $data['document_number'] = $document->{'@attributes'}->skjalsnúmer;
+        $data['date'] = $document->útbýting;
+        $data['type'] = $document->skjalategund;
+        $data['html'] = $document->slóð->html;
+        $data['pdf'] = $document->slóð->pdf;
+        $data['issue_number'] = $document->{'@attributes'}->málsnúmer;
+        $data['assembly_number'] = $document->{'@attributes'}->þingnúmer;
+
+        if ($documentFromDatabase) {
+          $issueDocumentService->update($documentFromDatabase->id, $data);
+        }
+        else {
+          $issueDocumentService->create($data);
+        }
+      }
+    }
+    else{
+      $issue = $issueService->getByIssueAndAssembly(
+        $documents->þingskjal->{'@attributes'}->málsnúmer, $documents->þingskjal->{'@attributes'}->þingnúmer
+      );
+
+      $document = $documents->þingskjal;
+      $documentFromDatabase = $issueDocumentService->getByIssueIdAndDate($issue->id, $document->útbýting);
+
+      $data['issue_id'] = $issue->id;
+      $data['document_number'] = $document->{'@attributes'}->skjalsnúmer;
+      $data['date'] = $document->útbýting;
+      $data['type'] = $document->skjalategund;
+      $data['html'] = $document->slóð->html;
+      $data['pdf'] = $document->slóð->pdf;
+      $data['issue_number'] = $document->{'@attributes'}->málsnúmer;
+      $data['assembly_number'] = $document->{'@attributes'}->þingnúmer;
+
+      if ($documentFromDatabase) {
+        $issueDocumentService->update($documentFromDatabase->id, $data);
+      }
+      else {
+        $issueDocumentService->create($data);
+      }
+    }
+  }
+
+  public function processIssueVoting($votes){
+    $issueService = new Issue();
+    $issueService->setDataSource($this->pdo);
+    $issueVoteService = new IssueVote();
+    $issueVoteService->setDataSource($this->pdo);
+
+    if(is_array($votes->atkvæðagreiðsla)) {
+      $issue = $issueService->getByIssueAndAssembly(
+        $votes->atkvæðagreiðsla[0]->{'@attributes'}->málsnúmer, $votes->atkvæðagreiðsla[0]->{'@attributes'}->þingnúmer
+      );
+
+      foreach ($votes->atkvæðagreiðsla as $vote) {
+
+      }
+    }
+    else{
+
+
+    }
+  }
+
+  public function processAdditionalIssueMatters($issueOverview){
+    $issue = $this->getFromXml($issueOverview->xml);
+    //$this->processIssue($issueOverview, $issue->mál);
+    if(isset($issue->þingskjöl->þingskjal)){
+      //$this->processIssueDocuments($issue->þingskjöl);
+    }
+    if(isset($issue->atkvæðagreiðslur->atkvæðagreiðsla)){
+      $this->processIssueVoting($issue->atkvæðagreiðslur);
+    }
+    $a = 10;
   }
 
   public function processPerson($person){

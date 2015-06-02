@@ -2,16 +2,15 @@
 /**
  * Created by PhpStorm.
  * User: drupalviking
- * Date: 26/05/15
- * Time: 20:40
+ * Date: 01/06/15
+ * Time: 15:32
  */
 namespace Althingi\Service;
 
 use PDOException;
 use Althingi\Lib\DataSourceAwareInterface;
 
-
-class Issue implements DataSourceAwareInterface{
+class IssueDocument implements DataSourceAwareInterface{
   use DatabaseService;
 
   /**
@@ -29,7 +28,7 @@ class Issue implements DataSourceAwareInterface{
   public function get($id){
     try{
       $statement = $this->pdo->prepare("
-        SELECT * FROM `Issue`
+        SELECT * FROM `IssueDocument`
         WHERE id = :id
       ");
 
@@ -48,91 +47,58 @@ class Issue implements DataSourceAwareInterface{
     catch( PDOException $e ){
       //echo "<pre>";
       //print_r($e->getMessage());
-      throw new Exception("Can't get Assembly item [{$id}]", 0, $e);
+      throw new Exception("Can't get IssueDocument item [{$id}]", 0, $e);
     }
   }
 
-  /**
-   * Gets one condition by issue number and assembly number
-   *
-   * @param $id
-   * @return bool|mixed
-   * @throws Exception
-   */
-  public function getByIssueAndAssembly($issueId, $assemblyId){
+  public function getByIssueIdAndDate($issueId, $date){
     try{
       $statement = $this->pdo->prepare("
-        SELECT * FROM `Issue`
+        SELECT * FROM `IssueDocument`
         WHERE issue_id = :issue_id AND
-        assembly_id = :assembly_id
+        `Date` = :distribution_date
       ");
 
       $statement->execute(array(
         'issue_id' => (int)$issueId,
-        'assembly_id' => (int)$assemblyId
+        'distribution_date' => $date
       ));
 
-      $issue = $statement->fetchObject();
+      $condition = $statement->fetchObject();
 
-      if(!$issue){
+      if(!$condition){
         return false;
       }
 
-      return $issue;
+      return $condition;
     }
     catch( PDOException $e ){
-      echo "<pre>";
-      print_r($e->getMessage());
-      echo "</pre>";
-      throw new Exception("Can't get Issue item.", 0, $e);
-    }
-  }
-
-  /**
-   * Gets all conditions
-   *
-   * @return array
-   * @throws Exception
-   */
-  public function fetchAllForAssembly($id){
-    try{
-      $statement = $this->pdo->prepare("
-        SELECT * FROM `Issue`
-        WHERE assembly_id = :id
-        ORDER BY issue_id ASC;
-      ");
-
-      $statement->execute(array(
-        'id' => (int)$id
-      ));
-
-      return $statement->fetchAll();
-    }
-    catch( PDOException $e){
-      echo $e->getMessage();
-      throw new Exception("Can't get Assemblies");
+      //echo "<pre>";
+      //print_r($e->getMessage());
+      throw new Exception("Can't get IssueDocument item [{$id}]", 0, $e);
     }
   }
 
   public function create(array $data){
     try{
-      $insertString = $this->insertString('Issue',$data);
+      $insertString = $this->insertString('IssueDocument',$data);
       $statement = $this->pdo->prepare($insertString);
       $statement->execute($data);
       $id = (int)$this->pdo->lastInsertId();
+      $data['id'] = $id;
       return $id;
     }
     catch (PDOException $e){
       echo "<pre>";
       print_r($e->getMessage());
       echo "</pre>";
-      throw new Exception("Can't create Issue entry",0,$e);
+      throw new Exception("Can't create IssueDocument entry",0,$e);
     }
   }
 
   public function update($id, array $data){
     try{
-      $updateString = $this->updateString('Issue',$data, "id={$id}");
+      $updateString = $this->updateString('IssueDocument',$data, "id={$id}");
       $statement = $this->pdo->prepare($updateString);
       $statement->execute($data);
       $data['id'] = $id;
@@ -142,7 +108,7 @@ class Issue implements DataSourceAwareInterface{
       echo "<pre>";
       print_r($e->getMessage());
       echo "</pre>";
-      throw new Exception("Can't update Issue entry",0,$e);
+      throw new Exception("Can't update IssueDocument entry",0,$e);
     }
   }
 
