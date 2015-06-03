@@ -10,7 +10,7 @@ namespace Althingi\Service;
 use PDOException;
 use Althingi\Lib\DataSourceAwareInterface;
 
-class IssueVote implements DataSourceAwareInterface{
+class Vote implements DataSourceAwareInterface{
   use DatabaseService;
 
   /**

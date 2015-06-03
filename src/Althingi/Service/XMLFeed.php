@@ -198,7 +198,7 @@ class XMLFeed implements DataSourceAwareInterface{
   public function processIssueVoting($votes){
     $issueService = new Issue();
     $issueService->setDataSource($this->pdo);
-    $issueVoteService = new IssueVote();
+    $issueVoteService = new Vote();
     $issueVoteService->setDataSource($this->pdo);
     $commiteeService = new Commitee();
     $commiteeService->setDataSource($this->pdo);
@@ -214,10 +214,23 @@ class XMLFeed implements DataSourceAwareInterface{
         $data = array();
         $data['id'] = $vote->{'@attributes'}->atkvæðagreiðslunúmer;
         $data['issue_id'] = $issue->id;
-        $data['time'] = strftime('%Y-%m-%d', strtotime($vote->tími));
+        $data['time'] = strftime('%Y-%m-%d %H:%M:%S', strtotime($vote->tími));
         $data['time_epoch'] = strtotime($vote->tími);
         $data['progress_type'] = $vote->tegund;
-        $data['vote_type'] = $vote->samantekt->aðferð;
+        if(isset($vote->samantekt->aðferð)){
+          $data['vote_type'] = $vote->samantekt->aðferð;
+
+          if($vote->samantekt->aðferð == 'atkvæðagreiðslukerfi'){
+            $data['yes'] = (isset($vote->samantekt->já->fjöldi)) ? $vote->samantekt->já->fjöldi : null;
+            $data['no'] = (isset($vote->samantekt->nei->fjöldi)) ? $vote->samantekt->nei->fjöldi : null;
+            $data['abstrained'] = (isset($vote->samantekt->sátuhjá->fjöldi)) ? $vote->samantekt->sátuhjá->fjöldi : null;
+          }
+        }
+
+        if(isset($vote->samantekt->afgreiðsla)){
+          $data['result'] = $vote->samantekt->afgreiðsla;
+        }
+
         $data['more'] = (is_string($vote->nánar)) ? $vote->nánar : null;
 
         //If the Issue is sent to a Commitee, get the commitee id
@@ -227,17 +240,10 @@ class XMLFeed implements DataSourceAwareInterface{
           $data['commitee'] = $vote->til;
         }
 
-        if($vote->samantekt->aðferð == 'atkvæðagreiðslukerfi'){
-          $data['yes'] = $vote->samantekt->já->fjöldi;
-          $data['no'] = $vote->samantekt->nei->fjöldi;
-          $data['abstrained'] = $vote->samantekt->sátuhjá->fjöldi;
-          $data['result'] = $vote->samantekt->afgreiðsla;
-
-          //Need to process each vote!!!!!
+        if(isset($vote->þingskjal)){
+          $data['document_id'] = $vote->þingskjal->{'@attributes'}->skjalsnúmer;
+          $data['assembly_id'] = $vote->þingskjal->{'@attributes'}->þingnúmer;
         }
-
-        $data['document_id'] = $vote->þingskjal->{'@attributes'}->skjalsnúmer;
-        $data['assembly_id'] = $vote->þingskjal->{'@attributes'}->þingnúmer;
 
         if($voteFromDatabase){
           $issueVoteService->update($vote->{'@attributes'}->atkvæðagreiðslunúmer, $data);
@@ -245,11 +251,193 @@ class XMLFeed implements DataSourceAwareInterface{
         else{
           $issueVoteService->create($data);
         }
+
+        if(isset($vote->samantekt->aðferð)){
+          if($vote->samantekt->aðferð == 'atkvæðagreiðslukerfi') {
+            $this->processIndividualVoteForIssue($vote);
+          }
+        }
       }
     }
     else{
-      
+
     }
+  }
+
+  public function processIndividualVoteForIssue($votes){
+    $personVoteService = new PersonVote();
+    $personVoteService->setDataSource($this->pdo);
+    $votes = $this->getFromXml($votes->slóð->xml);
+    foreach($votes->atkvæðaskrá->þingmaður as $vote){
+      $vote_id = $votes->{'@attributes'}->atkvæðagreiðslunúmer;
+      $person_id = $vote->{'@attributes'}->id;
+
+      $voteFromDatabase = $personVoteService->getForVoteAndPerson($vote_id, $person_id);
+
+      $data['vote_id'] = $vote_id;
+      $data['person_id'] = $person_id;
+      $data['vote'] = $vote->atkvæði;
+
+      if($voteFromDatabase){
+        $personVoteService->update($data);
+      }
+      else{
+        $personVoteService->create($data);
+      }
+    }
+  }
+
+  public function processReviewRequests($reviewRequests){
+    $reviewRequestService = new ReviewRequest();
+    $reviewRequestService->setDataSource($this->pdo);
+    $commiteeService = new Commitee();
+    $commiteeService->setDataSource($this->pdo);
+
+    if(is_array($reviewRequests->umsagnabeiðni)){
+      foreach($reviewRequests->umsagnabeiðni as $reviewRequest){
+        $dataFromDatabase = $reviewRequestService->getWithDetailedInfo(
+          $reviewRequest->{'@attributes'}->umsagnabeiðnanúmer,
+          $reviewRequest->viðtakandi,
+          $reviewRequest->{'@attributes'}->málsnúmer,
+          $reviewRequest->{'@attributes'}->þingnúmer
+        );
+
+        $data['review_request_number'] = $reviewRequest->{'@attributes'}->umsagnabeiðnanúmer;
+        $data['date'] = strftime('%Y-%m-%d', strtotime($reviewRequest->dagsetning));
+        $data['date_epoch'] = strtotime($reviewRequest->dagsetning);
+        $data['reciever'] = $reviewRequest->viðtakandi;
+        $data['commitee'] = $reviewRequest->nefnd;
+
+        $commiteeFromDatabase = $commiteeService->getByName($reviewRequest->nefnd);
+
+        $data['commitee_id'] = $commiteeFromDatabase->id;
+        $data['diary_number'] = (isset($reviewRequest->umsögn))
+          ? $reviewRequest->umsögn->{'@attributes'}->dagbókarnúmer
+          : null;
+        $data['issue_number'] = $reviewRequest->{'@attributes'}->málsnúmer;
+        $data['assembly_number'] = $reviewRequest->{'@attributes'}->þingnúmer;
+
+        if($dataFromDatabase){
+          $reviewRequestService->update($dataFromDatabase->id, $data);
+        }
+        else{
+          $reviewRequestService->create($data);
+        }
+      }
+    }
+    else{
+      $reviewRequest = $reviewRequests->umsagnabeiðni;
+      $dataFromDatabase = $reviewRequestService->getWithDetailedInfo(
+        $reviewRequest->{'@attributes'}->umsagnabeiðnanúmer,
+        $reviewRequest->viðtakandi,
+        $reviewRequest->{'@attributes'}->málsnúmer,
+        $reviewRequest->{'@attributes'}->þingnúmer
+      );
+
+      $data['review_request_number'] = $reviewRequest->{'@attributes'}->umsagnabeiðnanúmer;
+      $data['date'] = strftime('%Y-%m-%d', strtotime($reviewRequest->dagsetning));
+      $data['date_epoch'] = strtotime($reviewRequest->dagsetning);
+      $data['reciever'] = $reviewRequest->viðtakandi;
+      $data['commitee'] = $reviewRequest->nefnd;
+
+      $commiteeFromDatabase = $commiteeService->getByName($reviewRequest->nefnd);
+
+      $data['commitee_id'] = $commiteeFromDatabase->id;
+      $data['diary_number'] = (isset($reviewRequest->umsögn))
+        ? $reviewRequest->umsögn->{'@attributes'}->dagbókarnúmer
+        : null;
+      $data['issue_number'] = $reviewRequest->{'@attributes'}->málsnúmer;
+      $data['assembly_number'] = $reviewRequest->{'@attributes'}->þingnúmer;
+
+      if($dataFromDatabase){
+        $reviewRequestService->update($dataFromDatabase->id, $data);
+      }
+      else{
+        $reviewRequestService->create($data);
+      }
+    }
+  }
+
+  public function processReviews($reviews){
+    $reviewService = new Review();
+    $reviewService->setDataSource($this->pdo);
+    $commiteeService = new Commitee();
+    $commiteeService->setDataSource($this->pdo);
+
+    if(is_array($reviews->erindi)) {
+      foreach ($reviews->erindi as $review) {
+        $dataFromDatabase = $reviewService->getWithDetailedInfo(
+          $review->{'@attributes'}->dagbókarnúmer,
+          $review->sendandi,
+          $review->{'@attributes'}->málsnúmer,
+          $review->{'@attributes'}->þingnúmer
+        );
+
+        $data['diary_number'] = $review->{'@attributes'}->dagbókarnúmer;
+        $data['sender'] = $review->sendandi;
+        $data['commitee'] = (is_string($review->nefnd)) ? $review->nefnd : null;
+
+        if($review->nefnd != "forseti"){
+          $commiteeFromDatabase = $commiteeService->getByName($review->nefnd);
+
+          $data['commitee_id'] = $commiteeFromDatabase->id;
+        }
+        $data['arrival_date'] = strftime('%Y-%m-%d', strtotime($review->komudagur));
+        $data['arrival_date_epoch'] = strtotime($review->komudagur);
+        $data['send_date'] = strftime('%Y-%m-%d', strtotime($review->sendingadagur));
+        $data['send_date_epoch'] = strtotime($review->sendingadagur);
+        $data['review_type'] = $review->tegunderindis;
+        $data['path'] = $review->slóð->pdf;
+        $data['issue_number'] = $review->{'@attributes'}->málsnúmer;
+        $data['assembly_number'] = $review->{'@attributes'}->þingnúmer;
+
+        if($dataFromDatabase){
+          $reviewService->update($dataFromDatabase->id, $data);
+        }
+        else{
+          $reviewService->create($data);
+        }
+      }
+    }
+    else{
+      $review = $reviews->erindi;
+      $dataFromDatabase = $reviewService->getWithDetailedInfo(
+        $review->{'@attributes'}->dagbókarnúmer,
+        $review->sendandi,
+        $review->{'@attributes'}->málsnúmer,
+        $review->{'@attributes'}->þingnúmer
+      );
+
+      $data['diary_number'] = $review->{'@attributes'}->dagbókarnúmer;
+      $data['sender'] = $review->sendandi;
+      $data['commitee'] = (is_string($review->nefnd)) ? $review->nefnd : null;
+
+      if($review->nefnd != "forseti"){
+        $commiteeFromDatabase = $commiteeService->getByName($review->nefnd);
+
+        $data['commitee_id'] = $commiteeFromDatabase->id;
+      }
+
+      $data['arrival_date'] = strftime('%Y-%m-%d', strtotime($review->komudagur));
+      $data['arrival_date_epoch'] = strtotime($review->komudagur);
+      $data['send_date'] = strftime('%Y-%m-%d', strtotime($review->sendingadagur));
+      $data['send_date_epoch'] = strtotime($review->sendingadagur);
+      $data['review_type'] = $review->tegunderindis;
+      $data['path'] = $review->slóð->pdf;
+      $data['issue_number'] = $review->{'@attributes'}->málsnúmer;
+      $data['assembly_number'] = $review->{'@attributes'}->þingnúmer;
+
+      if($dataFromDatabase){
+        $reviewService->update($dataFromDatabase->id, $data);
+      }
+      else{
+        $reviewService->create($data);
+      }
+    }
+  }
+
+  public function processSpeeches($speeches){
+    $a = 10;
   }
 
   public function processAdditionalIssueMatters($issueOverview){
@@ -259,9 +447,17 @@ class XMLFeed implements DataSourceAwareInterface{
       //$this->processIssueDocuments($issue->þingskjöl);
     }
     if(isset($issue->atkvæðagreiðslur->atkvæðagreiðsla)){
-      $this->processIssueVoting($issue->atkvæðagreiðslur);
+      //$this->processIssueVoting($issue->atkvæðagreiðslur);
     }
-    $a = 10;
+    if(isset($issue->umsagnabeiðnir->umsagnabeiðni)){
+      //$this->processReviewRequests($issue->umsagnabeiðnir);
+    }
+    if(isset($issue->erindaskrá->erindi)){
+      //$this->processReviews($issue->erindaskrá);
+    }
+    if(isset($issue->ræður->ræða)){
+      $this->processSpeeches($issue->ræður);
+    }
   }
 
   public function processPerson($person){
