@@ -48,6 +48,39 @@ class AssemblyPerson implements DataSourceAwareInterface{
     }
   }
 
+  public function getForSpeaker($assembly_number, $person_id, $timestamp){
+    try{
+      $statement = $this->pdo->prepare("
+					SELECT * FROM `Assembly_has_Person` AP
+					WHERE assembly_id = :assembly_id
+					AND person_id = :person_id
+					AND `from` < :timest
+					AND `to` > :timest
+				");
+
+      $timest = strftime('%Y-%m-%d %H:%M:%S', strtotime($timestamp));
+      $statement->execute(array(
+        'assembly_id' => $assembly_number,
+        'person_id' => $person_id,
+        'timest' => $timest
+      ));
+
+      $person = $statement->fetchAll();
+
+      if (!$person) {
+        return FALSE;
+      }
+
+      return $person;
+    }
+    catch (PDOException $e) {
+      echo "<pre>";
+      print_r($e->getMessage());
+      echo "</pre>";
+      throw new Exception("Can't get item.", 0, $e);
+    }
+  }
+
   public function getWithDetailedInfo($assembly_id, $person_id, $from, $to) {
     try {
       if(is_null($to)){

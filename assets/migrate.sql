@@ -40,3 +40,36 @@ CREATE  TABLE `althingi`.`Review` (
   `issue_number` INT NULL ,
   `assembly_number` INT NULL ,
   PRIMARY KEY (`id`) );
+CREATE  TABLE `althingi`.`Meeting` (
+  `assembly_number` INT NOT NULL ,
+  `meeting_number` INT NOT NULL ,
+  `name` VARCHAR(255) NULL ,
+  `starts` DATETIME NULL ,
+  `starts_epoch` INT NULL ,
+  `ends` DATETIME NULL ,
+  `ends_epoch` INT NULL ,
+  `seating` VARCHAR(255) NULL ,
+  `document_xml` VARCHAR(255) NULL ,
+  PRIMARY KEY (`assembly_number`, `meeting_number`) );
+  CREATE  TABLE `althingi`.`Speech` (
+  `speech_id` INT NOT NULL ,
+  `person_id` INT NULL ,
+  `person_type` VARCHAR(255) NULL ,
+  `from` DATETIME NULL ,
+  `from_epoch` INT NULL ,
+  `to` DATETIME NULL ,
+  `date_epoch` INT NULL ,
+  `speech_type` VARCHAR(255) NULL ,
+  `iteration` VARCHAR(45) NULL ,
+  `meeting` INT NULL ,
+  `speech_xml` VARCHAR(255) NULL ,
+  `speech_html` VARCHAR(255) NULL ,
+  `party_id` INT NULL ,
+  `party` VARCHAR(255) NULL ,
+  `foreperson` VARCHAR(1) NULL ,
+  PRIMARY KEY (`speech_id`) );
+ALTER TABLE `althingi`.`Speech` CHANGE COLUMN `speech_id` `id` INT(11) NOT NULL  , ADD COLUMN `issue_id` INT NULL  AFTER `id` ;
+ALTER TABLE `althingi`.`Speech` CHANGE COLUMN `date_epoch` `to_epoch` INT(11) NULL DEFAULT NULL  , ADD COLUMN `speech_length` INT NULL  AFTER `to_epoch` ;
+ALTER TABLE `althingi`.`Speech` ADD COLUMN `assembly_number` INT NULL  AFTER `iteration` ;
+ALTER TABLE `althingi`.`Speech` CHANGE COLUMN `foreperson` `foreperson` TINYINT NULL DEFAULT NULL  ;
+ALTER TABLE `althingi`.`Speech` CHANGE COLUMN `id` `id` INT(11) NOT NULL AUTO_INCREMENT  ;

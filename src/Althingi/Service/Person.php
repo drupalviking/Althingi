@@ -48,6 +48,35 @@ class Person implements DataSourceAwareInterface{
     }
   }
 
+  public function getByNameAndTimestamp($name, $timestamp) {
+    try {
+      $statement = $this->pdo->prepare("
+          SELECT * FROM althingi.Person
+          WHERE name = :name
+          AND id IN (
+          SELECT person_id FROM
+          althingi.Assembly_has_Person
+          WHERE `from` < :timest and `to` > :timest
+);
+      ");
+      $timest = strftime('%Y-%m-%d %H:%M:%S', strtotime($timestamp));
+      $statement->execute(array(
+        'name' => $name,
+        'timest' => $timest,
+      ));
+      $person = $statement->fetchObject();
+
+      if (!$person) {
+        return FALSE;
+      }
+
+      return $person;
+    }
+    catch (PDOException $e) {
+      throw new Exception("Can't get person item. Person:[{$id}]", 0, $e);
+    }
+  }
+
   public function fetchAll() {
     try {
       $statement = $this->pdo->prepare("

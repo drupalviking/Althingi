@@ -82,11 +82,39 @@ class XMLFeed implements DataSourceAwareInterface{
   }
 
   public function processAssemblyIssues($assemblyId){
+    $this->processAssemblyMeetings($assemblyId);
     $issuesObject = $this->getFromXml("http://www.althingi.is/altext/xml/thingmalalisti/?lthing=" . $assemblyId);
     $issueService = new Issue();
     $issueService->setDataSource($this->pdo);
     foreach($issuesObject->mál as $issueOverview){
       $this->processAdditionalIssueMatters($issueOverview);
+    }
+  }
+
+  public function processAssemblyMeetings($assemblyId){
+    $meetings = $this->getFromXml('http://www.althingi.is/altext/xml/thingfundir/?lthing=' . $assemblyId);
+
+    $meetingService = new Meeting();
+    $meetingService->setDataSource($this->pdo);
+    foreach($meetings->þingfundur as $meeting){
+      $meetingFromDatabase = $meetingService->getForMeeting($assemblyId, $meeting->{'@attributes'}->númer);
+
+      $data['assembly_number'] = $assemblyId;
+      $data['meeting_number'] = $meeting->{'@attributes'}->númer;
+      $data['name'] = $meeting->fundarheiti;
+      $data['starts'] = strftime('%Y-%m-%d %H:%M:%S', strtotime($meeting->fundursettur));
+      $data['starts_epoch'] = strtotime($meeting->fundursettur);
+      $data['ends'] = strftime('%Y-%m-%d %H:%M:%S', strtotime($meeting->fuslit));
+      $data['ends_epoch'] = strtotime($meeting->fuslit);
+      $data['seating'] = $meeting->sætaskipan;
+      $data['document_xml'] = $meeting->fundarskjöl->xml;
+
+      if($meetingFromDatabase){
+        $meetingService->update($data);
+      }
+      else{
+        $meetingService->create($data);
+      }
     }
   }
 
@@ -436,27 +464,83 @@ class XMLFeed implements DataSourceAwareInterface{
     }
   }
 
-  public function processSpeeches($speeches){
-    $a = 10;
+  public function processSpeeches($issue, $speeches){
+    $speechService = new Speech();
+    $speechService->setDataSource($this->pdo);
+    $partyService = new Party();
+    $partyService->setDataSource($this->pdo);
+    $personService = new Person();
+    $personService->setDataSource($this->pdo);
+    $assemblyPersonService = new AssemblyPerson();
+    $assemblyPersonService->setDataSource($this->pdo);
+    $issueService = new Issue();
+    $issueService->setDataSource($this->pdo);
+    $issueFromDatabase = $issueService->getByIssueAndAssembly(
+      $issue->{'@attributes'}->málsnúmer, $issue->{'@attributes'}->þingnúmer
+    );
+
+    if(is_array($speeches->ræða)){
+      foreach($speeches->ræða as $speech){
+        $speaker = $personService->get($speech->{'@attributes'}->þingmaður);
+        $speakerInfo = $assemblyPersonService->getForSpeaker(
+          $speech->{'@attributes'}->þingnúmer,
+          $speaker->id,
+          $speech->ræðahófst
+        );
+
+       $speechFromDatabase = $speechService->getWithStartTimestamp(strtotime($speech->ræðahófst));
+        $data['issue_id'] = $issueFromDatabase->id;
+        $data['person_id'] = $speaker->id;
+        $data['person_type'] = (isset($speech->ráðherra)) ? $speech->ráðherra : "þingmaður";
+        $data['from'] = str_replace('T', ' ', $speech->ræðahófst);
+        $data['from_epoch'] = strtotime($speech->ræðahófst);
+        $data['to'] = str_replace('T', ' ', $speech->ræðulauk);
+        $data['to_epoch'] = strtotime($speech->ræðulauk);
+        $data['speech_length'] = strtotime($speech->ræðulauk) - strtotime($speech->ræðahófst);
+        $data['speech_type'] = $speech->tegundræðu;
+        $data['iteration'] = (is_string($speech->umræða)) ? $speech->umræða : null;
+        $data['meeting'] = $speech->{'@attributes'}->fundarnúmer;
+        $data['assembly_number'] = $speech->{'@attributes'}->þingnúmer;
+        $data['speech_xml'] = (isset($speech->slóðir->xml)) ? $speech->slóðir->xml : null;
+        $data['speech_html'] = (isset($speech->slóðir->html)) ? $speech->slóðir->html : null;
+        $data['party_id'] = $partyService->getByName($speakerInfo[0]->party)->id;
+        $data['party'] = $speakerInfo[0]->party;
+        $data['foreperson'] = isset($speech->forsetiAlþingis) ? 1 : 0;
+
+        if($speechFromDatabase){
+          $speechService->update($speechFromDatabase->id, $data);
+        }
+        else{
+          $speechService->create($data);
+        }
+      }
+    }
   }
 
   public function processAdditionalIssueMatters($issueOverview){
+    echo "Processing Additional Issue Matters: <br>";
     $issue = $this->getFromXml($issueOverview->xml);
-    //$this->processIssue($issueOverview, $issue->mál);
+    $this->processIssue($issueOverview, $issue->mál);
+    echo "Done with issue<br>";
     if(isset($issue->þingskjöl->þingskjal)){
-      //$this->processIssueDocuments($issue->þingskjöl);
+      $this->processIssueDocuments($issue->þingskjöl);
+      echo "Done with documents<br>";
     }
     if(isset($issue->atkvæðagreiðslur->atkvæðagreiðsla)){
-      //$this->processIssueVoting($issue->atkvæðagreiðslur);
+      $this->processIssueVoting($issue->atkvæðagreiðslur);
+      echo "Done with voting<br>";
     }
     if(isset($issue->umsagnabeiðnir->umsagnabeiðni)){
-      //$this->processReviewRequests($issue->umsagnabeiðnir);
+      $this->processReviewRequests($issue->umsagnabeiðnir);
+      echo "Done with Review Requests<br>";
     }
     if(isset($issue->erindaskrá->erindi)){
-      //$this->processReviews($issue->erindaskrá);
+      $this->processReviews($issue->erindaskrá);
+      echo "Done with Reviews<br>";
     }
     if(isset($issue->ræður->ræða)){
-      $this->processSpeeches($issue->ræður);
+      $this->processSpeeches($issue->mál, $issue->ræður);
+      echo "Done with Speeches<br>";
     }
   }
 
