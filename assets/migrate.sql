@@ -73,3 +73,9 @@ ALTER TABLE `althingi`.`Speech` CHANGE COLUMN `date_epoch` `to_epoch` INT(11) NU
 ALTER TABLE `althingi`.`Speech` ADD COLUMN `assembly_number` INT NULL  AFTER `iteration` ;
 ALTER TABLE `althingi`.`Speech` CHANGE COLUMN `foreperson` `foreperson` TINYINT NULL DEFAULT NULL  ;
 ALTER TABLE `althingi`.`Speech` CHANGE COLUMN `id` `id` INT(11) NOT NULL AUTO_INCREMENT  ;
+ALTER TABLE `althingi`.`IssueDocument` DROP FOREIGN KEY `fk_IssueDocument_Issue1` ;
+DROP TABLE `althingi`.`IssueSpeech`;
+ALTER TABLE `althingi`.`Vote` DROP FOREIGN KEY `fk_Vote_Issue1` , DROP FOREIGN KEY `fk_Vote_Commitee1` ;
+ALTER TABLE `althingi`.`Assembly_has_Person` DROP FOREIGN KEY `fk_Assembly_has_Person_Person1` , DROP FOREIGN KEY `fk_Assembly_has_Person_Party1` , DROP FOREIGN KEY `fk_Assembly_has_Person_Assembly1` ;
+ALTER TABLE `althingi`.`Commitee_has_Person` DROP FOREIGN KEY `fk_Commitee_has_Person_Person1` , DROP FOREIGN KEY `fk_Commitee_has_Person_Party1` , DROP FOREIGN KEY `fk_Commitee_has_Person_Commitee1` , DROP FOREIGN KEY `fk_Commitee_has_Person_Assembly1` ;
+ALTER TABLE `althingi`.`Issue` DROP FOREIGN KEY `fk_Issue_Assembly1` ;

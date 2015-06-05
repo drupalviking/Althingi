@@ -27,7 +27,22 @@ class XMLFeed implements DataSourceAwareInterface{
    * Function that knows the order of how to fetch the newest information from althingi.
    */
   public function bootstrapAssemblies(){
+    $assemblyService = new Assembly();
+    $assemblyService->setDataSource($this->pdo);
     $this->processAssemblies();
+    $assemblies = $assemblyService->fetchAll();
+    foreach($assemblies as $assembly){
+      $this->processCommitees($assembly->id);
+    }
+  }
+
+  public function bootstrapAssembly($assembly_id){
+    $this->processAssemblyPersons($assembly_id);
+    echo "Done with Assembly Persons, Ass: " . $assembly_id . "<br>";
+    $this->processAssemblyMeetings($assembly_id);
+    echo "Done with Assembly Meetings, Ass: " . $assembly_id . "<br>";
+    $this->processAssemblyIssues($assembly_id);
+    echo "Done with Assembly Issues, Ass: " . $assembly_id . "<br>";
   }
 
   /**
@@ -156,7 +171,7 @@ class XMLFeed implements DataSourceAwareInterface{
     $data['tag'] = $issueOverview->málstegund->heiti2;
     $data['issue_analysis'] = (is_string($issueOverview->efnisgreining)) ? $issueOverview->efnisgreining : null;
     $data['category'] = $issueOverview->{'@attributes'}->málsflokkur;
-    $data['status'] = $issue->staðamáls;
+    $data['status'] = (isset($issue->staðamáls)) ? $issue->staðamáls : null;
 
     if($issueFromDatabase){
       $issueService->update($issueFromDatabase->id, $data);
@@ -264,7 +279,7 @@ class XMLFeed implements DataSourceAwareInterface{
         //If the Issue is sent to a Commitee, get the commitee id
         if(isset($vote->til)){
           $commitee = $commiteeService->getByName($vote->til);
-          $data['commitee_id'] = $commitee->id;
+          $data['commitee_id'] = (isset($commitee)) ? $commitee->id : null;
           $data['commitee'] = $vote->til;
         }
 
@@ -296,21 +311,23 @@ class XMLFeed implements DataSourceAwareInterface{
     $personVoteService = new PersonVote();
     $personVoteService->setDataSource($this->pdo);
     $votes = $this->getFromXml($votes->slóð->xml);
-    foreach($votes->atkvæðaskrá->þingmaður as $vote){
-      $vote_id = $votes->{'@attributes'}->atkvæðagreiðslunúmer;
-      $person_id = $vote->{'@attributes'}->id;
+    if(isset($votes->atkvæðaskrá)){
+      foreach($votes->atkvæðaskrá->þingmaður as $vote) {
+        $vote_id = $votes->{'@attributes'}->atkvæðagreiðslunúmer;
+        $person_id = $vote->{'@attributes'}->id;
 
-      $voteFromDatabase = $personVoteService->getForVoteAndPerson($vote_id, $person_id);
+        $voteFromDatabase = $personVoteService->getForVoteAndPerson($vote_id, $person_id);
 
-      $data['vote_id'] = $vote_id;
-      $data['person_id'] = $person_id;
-      $data['vote'] = $vote->atkvæði;
+        $data['vote_id'] = $vote_id;
+        $data['person_id'] = $person_id;
+        $data['vote'] = $vote->atkvæði;
 
-      if($voteFromDatabase){
-        $personVoteService->update($data);
-      }
-      else{
-        $personVoteService->create($data);
+        if ($voteFromDatabase) {
+          $personVoteService->update($data);
+        }
+        else {
+          $personVoteService->create($data);
+        }
       }
     }
   }
@@ -412,8 +429,12 @@ class XMLFeed implements DataSourceAwareInterface{
         }
         $data['arrival_date'] = strftime('%Y-%m-%d', strtotime($review->komudagur));
         $data['arrival_date_epoch'] = strtotime($review->komudagur);
-        $data['send_date'] = strftime('%Y-%m-%d', strtotime($review->sendingadagur));
-        $data['send_date_epoch'] = strtotime($review->sendingadagur);
+        $data['send_date'] = (is_string($review->sendingadagur))
+          ? strftime('%Y-%m-%d', strtotime($review->sendingadagur))
+          : null;
+        $data['send_date_epoch'] = (is_string($review->sendingadagur))
+          ? strtotime($review->sendingadagur)
+          : null;
         $data['review_type'] = $review->tegunderindis;
         $data['path'] = $review->slóð->pdf;
         $data['issue_number'] = $review->{'@attributes'}->málsnúmer;
@@ -518,7 +539,7 @@ class XMLFeed implements DataSourceAwareInterface{
   }
 
   public function processAdditionalIssueMatters($issueOverview){
-    echo "Processing Additional Issue Matters: <br>";
+    echo "Processing Additional Issue Matters: " . $issueOverview->{'@attributes'}->málsnúmer . "<br>";
     $issue = $this->getFromXml($issueOverview->xml);
     $this->processIssue($issueOverview, $issue->mál);
     echo "Done with issue<br>";
@@ -827,7 +848,7 @@ class XMLFeed implements DataSourceAwareInterface{
         }
 
         $data['from'] = strftime('%Y-%m-%d', strtotime($assembly_attendance->tímabil->inn));
-        (is_string($assembly_attendance->tímabil->út))
+        $data['to'] = (is_string($assembly_attendance->tímabil->út))
           ? strftime('%Y-%m-%d', strtotime($assembly_attendance->tímabil->út))
           : null;
 
@@ -872,7 +893,7 @@ class XMLFeed implements DataSourceAwareInterface{
       $data['constituency_number'] = $assembly_attendance->kjördæmanúmer;
       $data['seat'] = $assembly_attendance->þingsalssæti;
       $data['from'] = strftime('%Y-%m-%d', strtotime($assembly_attendance->tímabil->inn));
-      (is_string($assembly_attendance->tímabil->út))
+      $data['to'] = (is_string($assembly_attendance->tímabil->út))
         ? strftime('%Y-%m-%d', strtotime($assembly_attendance->tímabil->út))
         : null;
       $data['party'] = $assembly_attendance->þingflokkur;
