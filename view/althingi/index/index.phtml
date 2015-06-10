@@ -1,10 +1,23 @@
 <h1>Alþingi</h1>
 <h2>Þinglistar</h2>
 <table>
+  <thead>
+    <tr>
+      <td>Þing</td>
+      <td>Tímabil frá</td>
+      <td>Tímabil til</td>
+      <td>Fjöldi mála</td>
+      <td>Ræðutími</td>
+    </tr>
+  </thead>
   <body>
     <?php foreach($this->assemblies as $assembly) : ?>
       <tr>
         <td><?=$assembly->id;?>. Löggjafarþing</td>
+        <td><?=strftime('%d.%m.%Y', strtotime($assembly->from)); ?></td>
+        <td><?=strftime('%d.%m.%Y', strtotime($assembly->to)); ?></td>
+        <td><?=(isset($assembly->issues)) ? $assembly->issues : '---';?></td>
+        <td><?=(isset($assembly->speechtime)) ? $assembly->speechtime : '---';?></td>
       </tr>
     <?php endforeach; ?>
   </body>

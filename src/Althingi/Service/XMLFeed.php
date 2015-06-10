@@ -524,8 +524,10 @@ class XMLFeed implements DataSourceAwareInterface{
         $data['assembly_number'] = $speech->{'@attributes'}->þingnúmer;
         $data['speech_xml'] = (isset($speech->slóðir->xml)) ? $speech->slóðir->xml : null;
         $data['speech_html'] = (isset($speech->slóðir->html)) ? $speech->slóðir->html : null;
-        $data['party_id'] = $partyService->getByName($speakerInfo[0]->party)->id;
-        $data['party'] = $speakerInfo[0]->party;
+        if($speakerInfo[0]){
+          $data['party_id'] = $partyService->getByName($speakerInfo[0]->party)->id;
+          $data['party'] = $speakerInfo[0]->party;
+        }
         $data['foreperson'] = isset($speech->forsetiAlþingis) ? 1 : 0;
 
         if($speechFromDatabase){

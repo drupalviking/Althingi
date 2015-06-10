@@ -101,6 +101,186 @@ class Speech implements DataSourceAwareInterface{
   }
 
   /**
+   * Gets the combined speech times for all issues for one assembly
+   *
+   * @param $assemblyNumber
+   * @return array|bool
+   * @throws \Althingi\Service\Exception
+   */
+  public function getSpeechTimesForAssembly($assemblyNumber){
+    try{
+      $statement = $this->pdo->prepare("
+        SELECT issue_id, SUM(to_epoch - from_epoch) as speech_time
+        FROM althingi.Speech WHERE assembly_number = :assembly_number
+        GROUP BY issue_id
+      ");
+
+      $statement->execute(array("assembly_number" => $assemblyNumber));
+
+      $speechTimes = $statement->fetchAll();
+
+      if(!$speechTimes){
+        return false;
+      }
+
+      return $speechTimes;
+    }
+    catch (PDOException $e) {
+      echo "<pre>";
+      print_r($e->getMessage());
+      echo "</pre>";
+      throw new Exception("Can't get item.", 0, $e);
+    }
+  }
+
+  /**
+   * Gets the combined speech times for all issues for one assembly
+   *
+   * @param int $assemblyNumber
+   * @param int $issue_id
+   * @return array|bool
+   * @throws \Althingi\Service\Exception
+   */
+  public function getSpeechTimesForAssemblyAndIssue($assemblyNumber, $issue_id){
+    try{
+      $statement = $this->pdo->prepare("
+        SELECT issue_id, SUM(to_epoch - from_epoch) as speech_time
+        FROM althingi.Speech
+        WHERE assembly_number = :assembly_number AND
+        issue_id = :issue_id
+        GROUP BY issue_id
+      ");
+
+      $statement->execute(array(
+        "assembly_number" => $assemblyNumber,
+        "issue_id" => $issue_id,
+      ));
+
+      $speechTimes = $statement->fetchAll();
+
+      if(!$speechTimes){
+        return false;
+      }
+
+      return $speechTimes;
+    }
+    catch (PDOException $e) {
+      echo "<pre>";
+      print_r($e->getMessage());
+      echo "</pre>";
+      throw new Exception("Can't get item.", 0, $e);
+    }
+  }
+
+  /**
+   * Gets the combined speech times for all issues for one assembly,
+   * grouped by the parties
+   *
+   * @param $assemblyNumber
+   * @return array|bool
+   * @throws \Althingi\Service\Exception
+   */
+  public function getSpeechTimesForAssemblyAndParty($assemblyNumber){
+    try{
+      $statement = $this->pdo->prepare("
+        SELECT issue_id, party, SUM(to_epoch - from_epoch) as speech_time
+        FROM althingi.Speech WHERE assembly_number = :assembly_number
+        GROUP BY issue_id, party
+      ");
+
+      $statement->execute(array("assembly_number" => $assemblyNumber));
+
+      $speechTimes = $statement->fetchAll();
+
+      if(!$speechTimes){
+        return false;
+      }
+
+      return $speechTimes;
+    }
+    catch (PDOException $e) {
+      echo "<pre>";
+      print_r($e->getMessage());
+      echo "</pre>";
+      throw new Exception("Can't get item.", 0, $e);
+    }
+  }
+
+  /**
+   * Gets the combined speech times for all issues for one assembly
+   * grouped by parties
+   *
+   * @param int $assemblyNumber
+   * @param int $issue_id
+   * @return array|bool
+   * @throws \Althingi\Service\Exception
+   */
+  public function getSpeechTimesForAssemblyIsuueAndParty($assemblyNumber, $issue_id){
+    try{
+      $statement = $this->pdo->prepare("
+        SELECT issue_id, party, SUM(to_epoch - from_epoch) as speech_time
+        FROM althingi.Speech
+        WHERE assembly_number = :assembly_number AND
+        issue_id = :issue_id
+        GROUP BY issue_id, party
+      ");
+
+      $statement->execute(array(
+        "assembly_number" => $assemblyNumber,
+        "issue_id" => $issue_id,
+      ));
+
+      $speechTimes = $statement->fetchAll();
+
+      if(!$speechTimes){
+        return false;
+      }
+
+      return $speechTimes;
+    }
+    catch (PDOException $e) {
+      echo "<pre>";
+      print_r($e->getMessage());
+      echo "</pre>";
+      throw new Exception("Can't get item.", 0, $e);
+    }
+  }
+
+  /**
+   * Gets the combined speech times for each assemblies
+   *
+   * @param int $assemblyNumber
+   * @param int $issue_id
+   * @return array|bool
+   * @throws \Althingi\Service\Exception
+   */
+  public function getSpeechTimesForAssemblies(){
+    try{
+      $statement = $this->pdo->prepare("
+        SELECT assembly_number, SUM(to_epoch - from_epoch) as speech_time
+        FROM althingi.Speech
+        GROUP BY assembly_number
+      ");
+
+      $statement->execute();
+
+      $speechTimes = $statement->fetchAll();
+
+      if(!$speechTimes){
+        return false;
+      }
+
+      return $speechTimes;
+    }
+    catch (PDOException $e) {
+      echo "<pre>";
+      print_r($e->getMessage());
+      echo "</pre>";
+      throw new Exception("Can't get item.", 0, $e);
+    }
+  }
+
+  /**
    * Sets the datasource
    * @param \PDO $pdo
    * @return null;

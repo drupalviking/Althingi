@@ -74,6 +74,61 @@ class Assembly implements DataSourceAwareInterface{
     }
   }
 
+  /**
+   * Gets all conditions
+   *
+   * @return array
+   */
+  public function fetchAllWithMetaData(){
+    try{
+      $statement = $this->pdo->prepare("
+        SELECT * FROM `Assembly`
+        ORDER BY id DESC;
+      ");
+      $statement->execute();
+      $assemblies = $statement->fetchAll();
+
+      $statement = $this->pdo->prepare("
+        SELECT assembly_id, count(id) as no_of_issues
+        FROM althingi.Issue
+        GROUP BY assembly_id;
+      ");
+
+      $statement->execute();
+      $issueCounts = $statement->fetchAll();
+
+      $statement = $this->pdo->prepare("
+        SELECT assembly_number, SUM(to_epoch - from_epoch) as speech_time
+        FROM althingi.Speech
+        GROUP BY assembly_number
+      ");
+      $statement->execute();
+      $speechTimeCounts = $statement->fetchAll();
+
+      foreach($assemblies as $key => $assembly){
+        foreach($issueCounts as $count){
+          if($count->assembly_id == $assembly->id){
+            $assemblies[$key]->issues = $count->no_of_issues;
+          }
+        }
+        foreach($speechTimeCounts as $count){
+          if($count->assembly_number == $assembly->id){
+            $hours = $count->speech_time / 3600;
+            $minutes = $count->speech_time % 3600;
+            $second = $minutes % 60;
+            $assemblies[$key]->speechtime = $hours . ":" . $minutes . ":" . $second;
+          }
+        }
+      }
+
+      return $assemblies;
+    }
+    catch( PDOException $e){
+      echo $e->getMessage();
+      throw new Exception("Can't get Assemblies");
+    }
+  }
+
   public function create(array $data){
     try{
       $insertString = $this->insertString('Assembly',$data);
