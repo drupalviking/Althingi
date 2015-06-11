@@ -43,6 +43,67 @@ class Speech implements DataSourceAwareInterface{
     }
   }
 
+  public function getForIssueAndAssembly($issueId, $assemblyId){
+    try{
+      $statement = $this->pdo->prepare("
+        SELECT * FROM `Speech` S
+        WHERE issue_id = :issue_id
+        AND assembly_number = :assembly_number
+      ");
+
+      $statement->execute(array(
+        "issue_id" => $issueId,
+        "assembly_number" => $assemblyId,
+      ));
+
+      $speech = $statement->fetchAll();
+
+      if(!$speech){
+        return false;
+      }
+
+      return $speech;
+    }
+    catch (PDOException $e) {
+      echo "<pre>";
+      print_r($e->getMessage());
+      echo "</pre>";
+      throw new Exception("Can't get item.", 0, $e);
+    }
+  }
+
+  public function getMetadataForIssueAndAssembly($issueId, $assemblyId){
+    $returnArray = array();
+    try{
+      $statement = $this->pdo->prepare("
+        SELECT count(id) as speech_count FROM `Speech` S
+        WHERE issue_id = :issue_id
+        AND assembly_number = :assembly_number
+      ");
+
+      $statement->execute(array(
+        "issue_id" => $issueId,
+        "assembly_number" => $assemblyId,
+      ));
+
+      $speechCount = $statement->fetchObject();
+
+      $returnArray['speechCount'] = $speechCount->speech_count;
+
+      $totalSpeechTimeObject = $this->getSpeechTimesForAssemblyAndIssue($assemblyId, $issueId);
+      $returnArray['totalSpeechTime'] = $totalSpeechTimeObject[0]->speech_time;
+      $returnArray['speechTimeByParties'] = $this->getSpeechTimesForAssemblyIsuueAndParty($assemblyId, $issueId);
+
+      return $returnArray;
+    }
+    catch (PDOException $e) {
+      echo "<pre>";
+      print_r($e->getMessage());
+      echo "</pre>";
+      throw new Exception("Can't get item.", 0, $e);
+    }
+  }
+
   public function getWithStartTimestamp($timestamp){
     try{
       $statement = $this->pdo->prepare("
@@ -134,7 +195,7 @@ class Speech implements DataSourceAwareInterface{
   }
 
   /**
-   * Gets the combined speech times for all issues for one assembly
+   * Gets the combined speech times for one issue for one assembly
    *
    * @param int $assemblyNumber
    * @param int $issue_id
@@ -148,7 +209,6 @@ class Speech implements DataSourceAwareInterface{
         FROM althingi.Speech
         WHERE assembly_number = :assembly_number AND
         issue_id = :issue_id
-        GROUP BY issue_id
       ");
 
       $statement->execute(array(

@@ -27,12 +27,19 @@ class IssueController extends AbstractActionController
    */
   public function indexAction()
   {
+    $assemblyId = $this->params()->fromRoute('assembly_id');
+    $issueId = $this->params()->fromRoute('id');
     //SERVICES
     //  load all services
     $sm = $this->getServiceLocator();
-    $assemblyId = $this->params()->fromRoute('assembly_id');
-    $issueId = $this->params()->fromRoute('id');
+    $issueService = $sm->get('Althingi\Service\Issue');
+    $speechService = $sm->get('Althingi\Service\Speech');
 
-    return new ViewModel();
+    $issue = $issueService->getByIssueAndAssembly($issueId, $assemblyId);
+    $speeches = $speechService->getMetadataForIssueAndAssembly($issue->id, $assemblyId);
+
+    return new ViewModel([
+      "issue" => $issue,
+    ]);
   }
 }

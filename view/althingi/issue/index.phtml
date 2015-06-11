@@ -6,4 +6,6 @@
  * Time: 11:04
  */
 ?>
-<h1>Þingmál</h1>
+<h1>Þingmál <?=$this->issue->issue_id . "/" . $this->issue->assembly_id . " - " . ucfirst($this->issue->name); ?></h1>
+<h2><?=$this->issue->type_name;?></h2>
+<p><strong>Staða: </strong><?=$this->issue->status; ?></p>

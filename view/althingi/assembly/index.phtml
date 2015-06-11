@@ -14,16 +14,16 @@
       <td>Þingmál</td>
       <td>Heiti</td>
       <td>Tegund</td>
-      <td>Tag</td>
+      <td>Staða máls</td>
     </tr>
   </thead>
   <tbody>
     <?php foreach($this->issues as $issue) : ?>
       <tr>
         <td><?=$issue->issue_id . "/" . $issue->assembly_id; ?></td>
-        <td><?=ucfirst($issue->name); ?></td>
+        <td><a href="<?=$this->url('issue/index',array('id'=>$issue->issue_id, 'assembly_id'=>$issue->assembly_id));?>"><?=ucfirst($issue->name); ?></a></td>
         <td><?=$issue->type_name; ?></td>
-        <td><?=$issue->tag; ?></td>
+        <td><?=$issue->status; ?></td>
       </tr>
     <?php endforeach; ?>
   </tbody>
