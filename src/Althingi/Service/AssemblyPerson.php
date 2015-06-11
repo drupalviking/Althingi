@@ -55,7 +55,7 @@ class AssemblyPerson implements DataSourceAwareInterface{
 					WHERE assembly_id = :assembly_id
 					AND person_id = :person_id
 					AND `from` < :timest
-					AND `to` > :timest
+					AND (`to` > :timest OR `to` IS NULL)
 				");
 
       $timest = strftime('%Y-%m-%d %H:%M:%S', strtotime($timestamp));

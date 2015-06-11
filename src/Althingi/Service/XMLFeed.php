@@ -37,7 +37,7 @@ class XMLFeed implements DataSourceAwareInterface{
   }
 
   public function bootstrapAssembly($assembly_id){
-    $this->processAssemblyPersons($assembly_id);
+    //$this->processAssemblyPersons($assembly_id);
     echo "Done with Assembly Persons, Ass: " . $assembly_id . "<br>";
     $this->processAssemblyMeetings($assembly_id);
     echo "Done with Assembly Meetings, Ass: " . $assembly_id . "<br>";
@@ -117,12 +117,12 @@ class XMLFeed implements DataSourceAwareInterface{
       $data['assembly_number'] = $assemblyId;
       $data['meeting_number'] = $meeting->{'@attributes'}->númer;
       $data['name'] = $meeting->fundarheiti;
-      $data['starts'] = strftime('%Y-%m-%d %H:%M:%S', strtotime($meeting->fundursettur));
-      $data['starts_epoch'] = strtotime($meeting->fundursettur);
-      $data['ends'] = strftime('%Y-%m-%d %H:%M:%S', strtotime($meeting->fuslit));
-      $data['ends_epoch'] = strtotime($meeting->fuslit);
-      $data['seating'] = $meeting->sætaskipan;
-      $data['document_xml'] = $meeting->fundarskjöl->xml;
+      $data['starts'] = (is_string($meeting->fundursettur)) ? strftime('%Y-%m-%d %H:%M:%S', strtotime($meeting->fundursettur)) : null;
+      $data['starts_epoch'] = (is_string($meeting->fundursettur)) ? strtotime($meeting->fundursettur) : null;
+      $data['ends'] = (is_string($meeting->fuslit)) ? strftime('%Y-%m-%d %H:%M:%S', strtotime($meeting->fuslit)) : null;
+      $data['ends_epoch'] = (is_string($meeting->fuslit)) ? strtotime($meeting->fuslit) : null;
+      $data['seating'] = (isset($meeting->sætaskipan)) ? $meeting->sætaskipan : null;
+      $data['document_xml'] = (is_string($meeting->fundarskjöl->xml)) ? $meeting->fundarskjöl->xml : null;
 
       if($meetingFromDatabase){
         $meetingService->update($data);

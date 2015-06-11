@@ -13,7 +13,7 @@
   <body>
     <?php foreach($this->assemblies as $assembly) : ?>
       <tr>
-        <td><?=$assembly->id;?>. Löggjafarþing</td>
+        <td><a href="<?=$this->url('assembly/index',array('id'=>$assembly->id));?>"><?=$assembly->id;?>. Löggjafarþing</a></td>
         <td><?=strftime('%d.%m.%Y', strtotime($assembly->from)); ?></td>
         <td><?=strftime('%d.%m.%Y', strtotime($assembly->to)); ?></td>
         <td><?=(isset($assembly->issues)) ? $assembly->issues : '---';?></td>
