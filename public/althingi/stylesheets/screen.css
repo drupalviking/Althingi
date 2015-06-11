@@ -45,3 +45,7 @@ a:hover{
 tbody tr:nth-child(even) a:hover{
     color: lightgreen;
 }
+
+p a:hover{
+    color: black;
+}

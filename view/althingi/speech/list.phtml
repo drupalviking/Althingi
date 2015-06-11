@@ -1,0 +1,31 @@
+<?php
+/**
+ * Created by PhpStorm.
+ * User: drupalviking
+ * Date: 11/06/15
+ * Time: 13:10
+ */
+?>
+<h1>Ræður</h1>
+<table>
+  <thead>
+    <tr>
+      <td>Tegund</td>
+      <td>Aðili</td>
+      <td>Flokkur</td>
+      <td>Umræða</td>
+      <td>Lengd</td>
+    </tr>
+  </thead>
+  <tbody>
+    <?php foreach($this->speeches as $speech) : ?>
+      <tr>
+        <td><a href="<?=$speech->speech_html;?>"><?=$speech->speech_type;?></a></td>
+        <td><?=$speech->name . ", " . $speech->person_type; ?></td>
+        <td><?=$speech->party; ?></td>
+        <td><?=$speech->iteration; ?></td>
+        <td><?=$this->time($speech->speech_length); ?></td>
+      </tr>
+    <?php endforeach; ?>
+  </tbody>
+</table>

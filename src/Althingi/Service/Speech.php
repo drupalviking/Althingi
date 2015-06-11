@@ -46,7 +46,9 @@ class Speech implements DataSourceAwareInterface{
   public function getForIssueAndAssembly($issueId, $assemblyId){
     try{
       $statement = $this->pdo->prepare("
-        SELECT * FROM `Speech` S
+        SELECT S.*, P.* FROM `Speech` S
+		    INNER JOIN Person P
+		    ON P.id = S.person_id
         WHERE issue_id = :issue_id
         AND assembly_number = :assembly_number
       ");
