@@ -15,7 +15,7 @@
       <tr>
         <td><a href="<?=$this->url('assembly/index',array('id'=>$assembly->id));?>"><?=$assembly->id;?>. Löggjafarþing</a></td>
         <td><?=strftime('%d.%m.%Y', strtotime($assembly->from)); ?></td>
-        <td><?=strftime('%d.%m.%Y', strtotime($assembly->to)); ?></td>
+        <td><?=($assembly->to) ? strftime('%d.%m.%Y', strtotime($assembly->to)) : 'Ekki lokið'; ?></td>
         <td><?=(isset($assembly->issues)) ? $assembly->issues : '---';?></td>
         <td><?=(isset($assembly->speechtime)) ? $assembly->speechtime : '---';?></td>
       </tr>

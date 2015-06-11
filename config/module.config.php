@@ -25,6 +25,32 @@ return array(
                     ),
                 ),
             ),
+          'issue' => array(
+            'type' => 'Zend\Mvc\Router\Http\Literal',
+            'options' => array(
+              'route' => '/issue',
+              'defaults' => array(
+                'controller' => 'Althingi\Controller\Issue',
+                'action' => 'index'
+              ),
+            ),
+            'may_terminate' => true,
+            'child_routes' => array(
+              'index' => array(
+                'type' => 'Zend\Mvc\Router\Http\Segment',
+                'options' => array(
+                  'route' => '/:assembly_id/:id',
+                  'constraints' => array(
+                    'id' => '[0-9]*',
+                  ),
+                  'defaults' => array(
+                    'controller' => 'Althingi\Controller\Issue',
+                    'action' => 'index'
+                  ),
+                )
+              ),
+            ),
+          ),
           'assembly' => array(
             'type' => 'Zend\Mvc\Router\Http\Literal',
             'options' => array(
@@ -99,6 +125,7 @@ return array(
         'invokables' => array(
             'Althingi\Controller\Assembly' => 'Althingi\Controller\AssemblyController',
             'Althingi\Controller\Index' => 'Althingi\Controller\IndexController',
+            'Althingi\Controller\Issue' => 'Althingi\Controller\IssueController',
         ),
     ),
     'view_helpers' => array(

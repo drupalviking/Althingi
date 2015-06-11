@@ -12,7 +12,9 @@
 
         <?=$this->headTitle('Alþingi ')->setSeparator(' / ')->setAutoEscape(false) ?>
 		<?=$this->headScript();?>
-        <?=$this->headLink(); ?>
+			<?php echo $this->headLink()
+				->appendStylesheet( $this->basePath() . '/stylesheets/screen.css' )
+			; ?>
 
     </head>
 	<body>

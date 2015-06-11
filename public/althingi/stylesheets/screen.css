@@ -1,0 +1,47 @@
+body{
+    margin:30px;
+}
+
+table {
+    border-collapse: collapse;
+}
+
+table, th, td {
+    border: 1px solid green;
+}
+
+table {
+    width: 100%;
+}
+
+thead td {
+    text-align: left;
+    background-color: green;
+    color: white;
+}
+
+td {
+    vertical-align: bottom;
+    padding: 15px;
+}
+
+tr{
+    color: darkgreen;
+}
+
+tbody tr:nth-child(odd) {
+    background-color: lightgreen;
+}
+
+a{
+  text-decoration: none;
+  color: darkgreen;
+}
+
+a:hover{
+    color: white;
+}
+
+tbody tr:nth-child(even) a:hover{
+    color: lightgreen;
+}
