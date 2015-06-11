@@ -15,7 +15,7 @@ use Zend\View\Model\FeedModel;
 
 
 /**
- * Class IndexController.
+ * Class IssueController.
  *
  * @package Althingi\Controller
  */
@@ -34,13 +34,16 @@ class IssueController extends AbstractActionController
     $sm = $this->getServiceLocator();
     $issueService = $sm->get('Althingi\Service\Issue');
     $speechService = $sm->get('Althingi\Service\Speech');
+    $voteService = $sm->get('Althingi\Service\Vote');
 
     $issue = $issueService->getByIssueAndAssembly($issueId, $assemblyId);
     $speeches = $speechService->getMetadataForIssueAndAssembly($issue->id, $assemblyId);
+    $votes = $voteService->getForIssue($issue->id);
 
     return new ViewModel([
       "issue" => $issue,
-      "speech_meta" => $speeches
+      "speech_meta" => $speeches,
+      "votes" => $votes
     ]);
   }
 }

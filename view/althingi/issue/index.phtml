@@ -34,3 +34,34 @@
   </tbody>
 </table>
 <p><a href="<?=$this->url('speech/index',array('issue_id' => $this->issue->id, 'assembly_id'=>$this->issue->assembly_id));?>">Ræður málsins</a></p>
+<h2>Atkvæðagreiðslur</h2>
+<table>
+  <thead>
+    <tr>
+      <td>1</td>
+      <td>2</td>
+      <td>3</td>
+      <td>Nefnd</td>
+      <td>Já</td>
+      <td>Nei</td>
+      <td>Sat hjá</td>
+      <td>Niðurstaða</td>
+      <td>Skjal</td>
+    </tr>
+  </thead>
+  <tbody>
+    <?php foreach($this->votes as $vote) : ?>
+      <tr>
+        <td><?=$vote->progress_type; ?></td>
+        <td><?=$vote->vote_type;?></td>
+        <td><?=$vote->more;?></td>
+        <td><?=$vote->commitee;?></td>
+        <td><?=$vote->yes;?></td>
+        <td><?=$vote->no;?></td>
+        <td><?=$vote->abstrained; ?></td>
+        <td><?=$vote->result;?></td>
+        <td><?=$vote->document_id;?></td>
+      </tr>
+    <?php endforeach; ?>
+  </tbody>
+</table>

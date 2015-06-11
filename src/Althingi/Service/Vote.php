@@ -51,6 +51,32 @@ class Vote implements DataSourceAwareInterface{
     }
   }
 
+  public function getForIssue($issueId){
+    try{
+      $statement = $this->pdo->prepare("
+        SELECT * FROM `Vote`
+        WHERE issue_id = :id
+      ");
+
+      $statement->execute(array(
+        'id' => (int)$issueId
+      ));
+
+      $vote = $statement->fetchAll();
+
+      if(!$vote){
+        return false;
+      }
+
+      return $vote;
+    }
+    catch( PDOException $e ){
+      echo "<pre>";
+      print_r($e->getMessage());
+      throw new Exception("Can't get Vote item [{$id}]", 0, $e);
+    }
+  }
+
   public function create(array $data){
     try{
       $insertString = $this->insertString('Vote',$data);
