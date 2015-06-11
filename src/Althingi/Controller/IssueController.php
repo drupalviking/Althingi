@@ -40,6 +40,7 @@ class IssueController extends AbstractActionController
 
     return new ViewModel([
       "issue" => $issue,
+      "speech_meta" => $speeches
     ]);
   }
 }

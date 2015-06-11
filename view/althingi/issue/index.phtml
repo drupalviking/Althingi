@@ -9,3 +9,27 @@
 <h1>Þingmál <?=$this->issue->issue_id . "/" . $this->issue->assembly_id . " - " . ucfirst($this->issue->name); ?></h1>
 <h2><?=$this->issue->type_name;?></h2>
 <p><strong>Staða: </strong><?=$this->issue->status; ?></p>
+<dl>
+  <dt>Fjöldi ræða:</dt>
+  <dd><?=$this->speech_meta['speechCount']; ?></dd>
+  <dt>Heildarræðutími:</dt>
+  <dd><?=$this->time($this->speech_meta['totalSpeechTime']); ?></dd>
+</dl>
+
+<h2>Ræðutími, brotinn niður eftir flokkum</h2>
+<table>
+  <thead>
+    <tr>
+      <td>Flokkur</td>
+      <td>Ræðutími</td>
+    </tr>
+  </thead>
+  <tbody>
+  <?php foreach($this->speech_meta['speechTimeByParties'] as $speechTime) : ?>
+    <tr>
+      <td><?=$speechTime->party; ?></td>
+      <td><?=$this->time($speechTime->speech_time); ?></td>
+    </tr>
+  <?php endforeach; ?>
+  </tbody>
+</table>

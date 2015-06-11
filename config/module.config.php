@@ -131,6 +131,7 @@ return array(
     'view_helpers' => array(
         'invokables' => array(
             'paragrapher' => 'Althingi\View\Helper\Paragrapher',
+            'time'        => 'Althingi\View\Helper\Time'
         ),
     ),
     'view_manager' => array(
