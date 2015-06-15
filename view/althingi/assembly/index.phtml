@@ -82,22 +82,28 @@
   <?php foreach($this->lawIssueSuggestions as $issue) : ?>
     <?php
       $string = "Mál ekki tekið á dagskrá";
-      if($sizeofVotes = $issue->votes > 0){
+      $sizeofVotes = sizeof($issue->votes);
+      if($issue->votes){
         $lastVote = $issue->votes[$sizeofVotes-1];
         if($lastVote->progress_type == "Till. gengur til síðari umr."){
           $diedAccumulatedCount++;
           $diedAccumulatedTime += $issue->speechTimes[0]->speech_time;
           $string = $lastVote->progress_type;
         }
-        else if($lastVote->result == "samþykkt"){
-          $acceptedAccumulatedCount++;
-          $acceptedAccumulatedTime += $issue->speechTimes[0]->speech_time;
-          $string = $lastVote->result . "(" . $lastVote->progress_type . ")";
-        }
         else if($lastVote->progress_type == "Till. gengur"){
           $diedAccumulatedCount++;
           $diedAccumulatedTime += $issue->speechTimes[0]->speech_time;
           $string = $lastVote->progress_type . " til: " . $lastVote->commitee;
+        }
+        else if($lastVote->progress_type == "Till."){
+          if($lastVote->result == "samþykkt"){
+            $acceptedAccumulatedCount++;
+            $acceptedAccumulatedTime += $issue->speechTimes[0]->speech_time;
+            $string = $lastVote->result . "(" . $lastVote->progress_type . ")";
+          }
+          else{
+            $b = 10;
+          }
         }
         else{
           $diedAccumulatedCount++;
