@@ -94,19 +94,33 @@ class Issue implements DataSourceAwareInterface{
    * @return array
    * @throws Exception
    */
-  public function fetchAllForAssembly($id){
+  public function fetchAllForAssembly($id, $type = 'lagafrumvarp'){
+    $speechService = new Speech();
+    $speechService->setDataSource($this->pdo);
+    $voteService = new Vote();
+    $voteService->setDataSource($this->pdo);
+
     try{
       $statement = $this->pdo->prepare("
         SELECT * FROM `Issue`
         WHERE assembly_id = :id
-        ORDER BY issue_id ASC;
+        AND `tag` = :type_of_issue
+        ORDER BY `status` ASC;
       ");
 
       $statement->execute(array(
-        'id' => (int)$id
+        'id' => (int)$id,
+        'type_of_issue' => $type
       ));
 
-      return $statement->fetchAll();
+      $issues = $statement->fetchAll();
+
+      foreach($issues as &$issue){
+        $issue->speechTimes = $speechService->getSpeechTimesForAssemblyAndIssue($issue->assembly_id, $issue->id);
+        $issue->votes = $voteService->getForIssue($issue->id);
+      }
+
+      return $issues;
     }
     catch( PDOException $e){
       echo $e->getMessage();

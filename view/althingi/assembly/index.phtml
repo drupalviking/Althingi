@@ -6,25 +6,243 @@
  * Time: 20:38
  */
 ?>
+<?php $accumulatedTime = 0; ?>
 <h1><?=$this->assembly->id; ?>. Löggjafarþing Íslands</h1>
-<p>Lögð voru fram <?=sizeof($this->issues); ?> mál á þessu þingi.</p>
+<h2>Lagafrumvörp</h2>
+<p>Lögð voru fram <?=sizeof($this->lawIssues); ?> lagafrumvörp á þessu þingi.</p>
 <table>
   <thead>
     <tr>
       <td>Þingmál</td>
       <td>Heiti</td>
       <td>Tegund</td>
+      <td>Heildarræðutími</td>
       <td>Staða máls</td>
     </tr>
   </thead>
   <tbody>
-    <?php foreach($this->issues as $issue) : ?>
+    <?php foreach($this->lawIssues as $issue) : ?>
+      <?php $accumulatedTime += $issue->speechTimes[0]->speech_time; ?>
       <tr>
         <td><?=$issue->issue_id . "/" . $issue->assembly_id; ?></td>
         <td><a href="<?=$this->url('issue/index',array('id'=>$issue->issue_id, 'assembly_id'=>$issue->assembly_id));?>"><?=ucfirst($issue->name); ?></a></td>
         <td><?=$issue->type_name; ?></td>
+        <td><?=$this->time($issue->speechTimes[0]->speech_time);?></td>
         <td><?=$issue->status; ?></td>
       </tr>
     <?php endforeach; ?>
   </tbody>
+  <tfoot>
+    <tr><td>&nbsp;</td><td><nbsp;</td><td>&nbsp;</td><td><p>Samanlagður ræðutími: <?=$this->time($accumulatedTime); ?></p></td></tr>
+  </tfoot>
+</table>
+
+<?php $accumulatedTime = 0; ?>
+<h2>Þingsályktunartillögur</h2>
+<p>Lagðar voru fram <?=sizeof($this->lawIssueSuggestions); ?> þingsályktunartillögur á þessu þingi.</p>
+<table>
+  <thead>
+  <tr>
+    <td>Þingmál</td>
+    <td>Heiti</td>
+    <td>Tegund</td>
+    <td>Heildarræðutími</td>
+    <td>Staða máls</td>
+  </tr>
+  </thead>
+  <tbody>
+  <?php foreach($this->lawIssueSuggestions as $issue) : ?>
+    <?php $accumulatedTime += $issue->speechTimes[0]->speech_time; ?>
+    <tr>
+      <td><?=$issue->issue_id . "/" . $issue->assembly_id; ?></td>
+      <td><a href="<?=$this->url('issue/index',array('id'=>$issue->issue_id, 'assembly_id'=>$issue->assembly_id));?>"><?=ucfirst($issue->name); ?></a></td>
+      <td><?=$issue->type_name; ?></td>
+      <td><?=$this->time($issue->speechTimes[0]->speech_time);?></td>
+      <td><?=$issue->status; ?></td>
+    </tr>
+  <?php endforeach; ?>
+  </tbody>
+  <tfoot>
+    <tr><td>&nbsp;</td><td><nbsp;</td><td>&nbsp;</td><td><p>Samanlagður ræðutími: <?=$this->time($accumulatedTime); ?></p></td></tr>
+  </tfoot>
+</table>
+
+<?php $accumulatedTime = 0; ?>
+<h2>Fyrirspurnir</h2>
+<p>Lagðar voru fram <?=sizeof($this->questions); ?> fyrirspurnir á þessu þingi.</p>
+<table>
+  <thead>
+  <tr>
+    <td>Þingmál</td>
+    <td>Heiti</td>
+    <td>Tegund</td>
+    <td>Heildarræðutími</td>
+    <td>Staða máls</td>
+  </tr>
+  </thead>
+  <tbody>
+  <?php foreach($this->questions as $issue) : ?>
+    <?php $accumulatedTime += $issue->speechTimes[0]->speech_time; ?>
+    <tr>
+      <td><?=$issue->issue_id . "/" . $issue->assembly_id; ?></td>
+      <td><a href="<?=$this->url('issue/index',array('id'=>$issue->issue_id, 'assembly_id'=>$issue->assembly_id));?>"><?=ucfirst($issue->name); ?></a></td>
+      <td><?=$issue->type_name; ?></td>
+      <td><?=$this->time($issue->speechTimes[0]->speech_time);?></td>
+      <td><?=$issue->status; ?></td>
+    </tr>
+  <?php endforeach; ?>
+  </tbody>
+  <tfoot>
+    <tr><td>&nbsp;</td><td><nbsp;</td><td>&nbsp;</td><td><p>Samanlagður ræðutími: <?=$this->time($accumulatedTime); ?></p></td></tr>
+  </tfoot>
+</table>
+
+<?php $accumulatedTime = 0; ?>
+<h2>Skýrslur</h2>
+<p>Lagðar voru fram <?=sizeof($this->reports); ?> skýrslur á þessu þingi.</p>
+<table>
+  <thead>
+  <tr>
+    <td>Þingmál</td>
+    <td>Heiti</td>
+    <td>Tegund</td>
+    <td>Heildarræðutími</td>
+    <td>Staða máls</td>
+  </tr>
+  </thead>
+  <tbody>
+  <?php foreach($this->reports as $issue) : ?>
+    <?php $accumulatedTime += $issue->speechTimes[0]->speech_time; ?>
+    <tr>
+      <td><?=$issue->issue_id . "/" . $issue->assembly_id; ?></td>
+      <td><a href="<?=$this->url('issue/index',array('id'=>$issue->issue_id, 'assembly_id'=>$issue->assembly_id));?>"><?=ucfirst($issue->name); ?></a></td>
+      <td><?=$issue->type_name; ?></td>
+      <td><?=$this->time($issue->speechTimes[0]->speech_time);?></td>
+      <td><?=$issue->status; ?></td>
+    </tr>
+  <?php endforeach; ?>
+  </tbody>
+  <tfoot>
+    <tr><td>&nbsp;</td><td><nbsp;</td><td>&nbsp;</td><td><p>Samanlagður ræðutími: <?=$this->time($accumulatedTime); ?></p></td></tr>
+  </tfoot>
+</table>
+
+<?php $accumulatedTime = 0; ?>
+<h2>Fyrirspurnir til skriflegs svars</h2>
+<p>Lagðar voru fram <?=sizeof($this->questionToWritten); ?> fyrirspurnir til skriflegs svars á þessu þingi.</p>
+<table>
+  <thead>
+  <tr>
+    <td>Þingmál</td>
+    <td>Heiti</td>
+    <td>Tegund</td>
+    <td>Heildarræðutími</td>
+    <td>Staða máls</td>
+  </tr>
+  </thead>
+  <tbody>
+  <?php foreach($this->questionToWritten as $issue) : ?>
+    <?php $accumulatedTime += $issue->speechTimes[0]->speech_time; ?>
+    <tr>
+      <td><?=$issue->issue_id . "/" . $issue->assembly_id; ?></td>
+      <td><a href="<?=$this->url('issue/index',array('id'=>$issue->issue_id, 'assembly_id'=>$issue->assembly_id));?>"><?=ucfirst($issue->name); ?></a></td>
+      <td><?=$issue->type_name; ?></td>
+      <td><?=$this->time($issue->speechTimes[0]->speech_time);?></td>
+      <td><?=$issue->status; ?></td>
+    </tr>
+  <?php endforeach; ?>
+  </tbody>
+  <tfoot>
+    <tr><td>&nbsp;</td><td><nbsp;</td><td>&nbsp;</td><td><p>Samanlagður ræðutími: <?=$this->time($accumulatedTime); ?></p></td></tr>
+  </tfoot>
+</table>
+
+<?php $accumulatedTime = 0; ?>
+<h2>Beiðni um skýrslu</h2>
+<p>Lagðar voru fram <?=sizeof($this->requestForReport); ?> beiðnir um skýrslur á þessu þingi.</p>
+<table>
+  <thead>
+  <tr>
+    <td>Þingmál</td>
+    <td>Heiti</td>
+    <td>Tegund</td>
+    <td>Heildarræðutími</td>
+    <td>Staða máls</td>
+  </tr>
+  </thead>
+  <tbody>
+  <?php foreach($this->requestForReport as $issue) : ?>
+    <?php $accumulatedTime += $issue->speechTimes[0]->speech_time; ?>
+    <tr>
+      <td><?=$issue->issue_id . "/" . $issue->assembly_id; ?></td>
+      <td><a href="<?=$this->url('issue/index',array('id'=>$issue->issue_id, 'assembly_id'=>$issue->assembly_id));?>"><?=ucfirst($issue->name); ?></a></td>
+      <td><?=$issue->type_name; ?></td>
+      <td><?=$this->time($issue->speechTimes[0]->speech_time);?></td>
+      <td><?=$issue->status; ?></td>
+    </tr>
+  <?php endforeach; ?>
+  </tbody>
+  <tfoot>
+    <tr><td>&nbsp;</td><td><nbsp;</td><td>&nbsp;</td><td><p>Samanlagður ræðutími: <?=$this->time($accumulatedTime); ?></p></td></tr>
+  </tfoot>
+</table>
+
+<h2>Álit nefndar um skýrslu</h2>
+<?php $accumulatedTime = 0; ?>
+<p>Lögð voru fram <?=sizeof($this->commiteeSuggestionsForReport); ?> álit nefnda um skýrslur á þessu þingi.</p>
+<table>
+  <thead>
+  <tr>
+    <td>Þingmál</td>
+    <td>Heiti</td>
+    <td>Tegund</td>
+    <td>Heildarræðutími</td>
+    <td>Staða máls</td>
+  </tr>
+  </thead>
+  <tbody>
+  <?php foreach($this->commiteeSuggestionsForReport as $issue) : ?>
+    <?php $accumulatedTime += $issue->speechTimes[0]->speech_time; ?>
+    <tr>
+      <td><?=$issue->issue_id . "/" . $issue->assembly_id; ?></td>
+      <td><a href="<?=$this->url('issue/index',array('id'=>$issue->issue_id, 'assembly_id'=>$issue->assembly_id));?>"><?=ucfirst($issue->name); ?></a></td>
+      <td><?=$issue->type_name; ?></td>
+      <td><?=$this->time($issue->speechTimes[0]->speech_time);?></td>
+      <td><?=$issue->status; ?></td>
+    </tr>
+  <?php endforeach; ?>
+  </tbody>
+  <tfoot>
+    <tr><td>&nbsp;</td><td><nbsp;</td><td>&nbsp;</td><td><p>Samanlagður ræðutími: <?=$this->time($accumulatedTime); ?></p></td></tr>
+  </tfoot>
+</table>
+
+<?php $accumulatedTime = 0; ?>
+<h2>Vantraust</h2>
+<p>Lagðar voru fram <?=sizeof($this->disapproval); ?> vantrauststillögur á þessu þingi.</p>
+<table>
+  <thead>
+  <tr>
+    <td>Þingmál</td>
+    <td>Heiti</td>
+    <td>Tegund</td>
+    <td>Heildarræðutími</td>
+    <td>Staða máls</td>
+  </tr>
+  </thead>
+  <tbody>
+  <?php foreach($this->disapproval as $issue) : ?>
+    <?php $accumulatedTime += $issue->speechTimes[0]->speech_time; ?>
+    <tr>
+      <td><?=$issue->issue_id . "/" . $issue->assembly_id; ?></td>
+      <td><a href="<?=$this->url('issue/index',array('id'=>$issue->issue_id, 'assembly_id'=>$issue->assembly_id));?>"><?=ucfirst($issue->name); ?></a></td>
+      <td><?=$issue->type_name; ?></td>
+      <td><?=$this->time($issue->speechTimes[0]->speech_time);?></td>
+      <td><?=$issue->status; ?></td>
+    </tr>
+  <?php endforeach; ?>
+  </tbody>
+  <tfoot>
+    <tr><td>&nbsp;</td><td><nbsp;</td><td>&nbsp;</td><td><p>Samanlagður ræðutími: <?=$this->time($accumulatedTime); ?></p></td></tr>
+  </tfoot>
 </table>

@@ -49,3 +49,7 @@ tbody tr:nth-child(even) a:hover{
 p a:hover{
     color: black;
 }
+
+tfoot tr p{
+    font-weight: bold;
+}
