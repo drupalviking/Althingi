@@ -7,6 +7,10 @@
  */
 ?>
 <?php $accumulatedTime = 0; ?>
+<?php $lawAccumulatedTime = 0; ?>
+<?php $diedAccumulatedTime = 0; ?>
+<?php $lawAccumulatedCount = 0; ?>
+<?php $diedAccumulatedCount = 0; ?>
 <h1><?=$this->assembly->id; ?>. Löggjafarþing Íslands</h1>
 <h2>Lagafrumvörp</h2>
 <p>Lögð voru fram <?=sizeof($this->lawIssues); ?> lagafrumvörp á þessu þingi.</p>
@@ -23,6 +27,16 @@
   <tbody>
     <?php foreach($this->lawIssues as $issue) : ?>
       <?php $accumulatedTime += $issue->speechTimes[0]->speech_time; ?>
+      <?php
+        if($issue->status == 'Samþykkt sem lög frá Alþingi.'){
+          $lawAccumulatedTime += $issue->speechTimes[0]->speech_time;
+          $lawAccumulatedCount++;
+        }
+        else{
+          $diedAccumulatedTime += $issue->speechTimes[0]->speech_time;
+          $diedAccumulatedCount++;
+        }
+      ?>
       <tr>
         <td><?=$issue->issue_id . "/" . $issue->assembly_id; ?></td>
         <td><a href="<?=$this->url('issue/index',array('id'=>$issue->issue_id, 'assembly_id'=>$issue->assembly_id));?>"><?=ucfirst($issue->name); ?></a></td>
@@ -33,11 +47,25 @@
     <?php endforeach; ?>
   </tbody>
   <tfoot>
-    <tr><td>&nbsp;</td><td><nbsp;</td><td>&nbsp;</td><td><p>Samanlagður ræðutími: <?=$this->time($accumulatedTime); ?></p></td></tr>
+    <tr><td>&nbsp;</td><td><nbsp;</td><td>&nbsp;</td>
+      <td>
+        <ul>
+          <li><p>Samanlagður ræðutími: <?=$this->time($accumulatedTime); ?></p></li>
+          <li><p>Ræðutími samþykktra þingmála: <?=$this->time($lawAccumulatedTime); ?></p></li>
+          <li><p>Fjöldi samþykktra þingmála: <?=$lawAccumulatedCount;?></p></li>
+          <li><p>Ræðutími ósamþykktra þingmála: <?=$this->time($diedAccumulatedTime); ?></p></li>
+          <li><p>Fjöldi ósamþykktra þingmála: <?=$diedAccumulatedCount;?></p></li>
+        </ul>
+      </td>
+    </tr>
   </tfoot>
 </table>
 
 <?php $accumulatedTime = 0; ?>
+<?php $acceptedAccumulatedTime = 0; ?>
+<?php $diedAccumulatedTime = 0; ?>
+<?php $acceptedAccumulatedCount = 0; ?>
+<?php $diedAccumulatedCount = 0; ?>
 <h2>Þingsályktunartillögur</h2>
 <p>Lagðar voru fram <?=sizeof($this->lawIssueSuggestions); ?> þingsályktunartillögur á þessu þingi.</p>
 <table>
@@ -52,18 +80,59 @@
   </thead>
   <tbody>
   <?php foreach($this->lawIssueSuggestions as $issue) : ?>
+    <?php
+      $string = "Mál ekki tekið á dagskrá";
+      if($sizeofVotes = $issue->votes > 0){
+        $lastVote = $issue->votes[$sizeofVotes-1];
+        if($lastVote->progress_type == "Till. gengur til síðari umr."){
+          $diedAccumulatedCount++;
+          $diedAccumulatedTime += $issue->speechTimes[0]->speech_time;
+          $string = $lastVote->progress_type;
+        }
+        else if($lastVote->result == "samþykkt"){
+          $acceptedAccumulatedCount++;
+          $acceptedAccumulatedTime += $issue->speechTimes[0]->speech_time;
+          $string = $lastVote->result . "(" . $lastVote->progress_type . ")";
+        }
+        else if($lastVote->progress_type == "Till. gengur"){
+          $diedAccumulatedCount++;
+          $diedAccumulatedTime += $issue->speechTimes[0]->speech_time;
+          $string = $lastVote->progress_type . " til: " . $lastVote->commitee;
+        }
+        else{
+          $diedAccumulatedCount++;
+          $diedAccumulatedTime += $issue->speechTimes[0]->speech_time;
+          $string = "Óvissa um afdrif";
+        }
+      }
+      else{
+        $diedAccumulatedCount++;
+        $diedAccumulatedTime += $issue->speechTimes[0]->speech_time;
+      }
+
+    $a = 10;
+    ?>
     <?php $accumulatedTime += $issue->speechTimes[0]->speech_time; ?>
     <tr>
       <td><?=$issue->issue_id . "/" . $issue->assembly_id; ?></td>
       <td><a href="<?=$this->url('issue/index',array('id'=>$issue->issue_id, 'assembly_id'=>$issue->assembly_id));?>"><?=ucfirst($issue->name); ?></a></td>
       <td><?=$issue->type_name; ?></td>
       <td><?=$this->time($issue->speechTimes[0]->speech_time);?></td>
-      <td><?=$issue->status; ?></td>
+      <td><?=$string; ?></td>
     </tr>
   <?php endforeach; ?>
   </tbody>
   <tfoot>
-    <tr><td>&nbsp;</td><td><nbsp;</td><td>&nbsp;</td><td><p>Samanlagður ræðutími: <?=$this->time($accumulatedTime); ?></p></td></tr>
+    <tr><td>&nbsp;</td><td><nbsp;</td><td>&nbsp;</td>
+      <td>
+        <ul>
+          <li><p>Samanlagður ræðutími: <?=$this->time($accumulatedTime); ?></p></li>
+          <li><p>Ræðutími samþykktra tillagna: <?=$this->time($acceptedAccumulatedTime); ?></p></li>
+          <li><p>Fjöldi samþykktra tillagna: <?=$acceptedAccumulatedCount;?></p></li>
+          <li><p>Ræðutími ósamþykktra tillagna: <?=$this->time($diedAccumulatedTime); ?></p></li>
+          <li><p>Fjöldi ósamþykktra tillagna: <?=$diedAccumulatedCount;?></p></li>
+        </ul>
+      </td>
   </tfoot>
 </table>
 
