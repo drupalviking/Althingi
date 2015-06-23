@@ -6,16 +6,19 @@
       <td>Þing</td>
       <td>Tímabil frá</td>
       <td>Tímabil til</td>
+      <td>Fjöldi daga</td>
       <td>Fjöldi mála</td>
       <td>Ræðutími</td>
     </tr>
   </thead>
   <body>
     <?php foreach($this->assemblies as $assembly) : ?>
+      <?php $finalDate = isset($assembly->to) ? strtotime($assembly->to) : time(); ?>
       <tr>
         <td><a href="<?=$this->url('assembly/index',array('id'=>$assembly->id));?>"><?=$assembly->id;?>. Löggjafarþing</a></td>
         <td><?=strftime('%d.%m.%Y', strtotime($assembly->from)); ?></td>
         <td><?=($assembly->to) ? strftime('%d.%m.%Y', strtotime($assembly->to)) : 'Ekki lokið'; ?></td>
+        <td><?=(($finalDate) - (strtotime($assembly->from)))/86400; ?></td>
         <td><?=(isset($assembly->issues)) ? $assembly->issues : '---';?></td>
         <td><?=(isset($assembly->speechtime)) ? $assembly->speechtime : '---';?></td>
       </tr>
