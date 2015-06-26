@@ -38,11 +38,11 @@ class XMLFeed implements DataSourceAwareInterface{
 
   public function bootstrapAssembly($assembly_id){
     //$this->processAssemblyPersons($assembly_id);
-    echo "Done with Assembly Persons, Ass: " . $assembly_id . "<br>";
+    echo "Done with Assembly Persons, Ass: " . $assembly_id . "\n";
     $this->processAssemblyMeetings($assembly_id);
-    echo "Done with Assembly Meetings, Ass: " . $assembly_id . "<br>";
+    echo "Done with Assembly Meetings, Ass: " . $assembly_id . "\n";
     $this->processAssemblyIssues($assembly_id);
-    echo "Done with Assembly Issues, Ass: " . $assembly_id . "<br>";
+    echo "Done with Assembly Issues, Ass: " . $assembly_id . "\n";
   }
 
   /**
@@ -541,29 +541,29 @@ class XMLFeed implements DataSourceAwareInterface{
   }
 
   public function processAdditionalIssueMatters($issueOverview){
-    echo "Processing Additional Issue Matters: " . $issueOverview->{'@attributes'}->málsnúmer . "<br>";
+    echo "Processing Additional Issue Matters: " . $issueOverview->{'@attributes'}->málsnúmer . "\n";
     $issue = $this->getFromXml($issueOverview->xml);
     $this->processIssue($issueOverview, $issue->mál);
-    echo "Done with issue<br>";
+    echo "Done with issue\n";
     if(isset($issue->þingskjöl->þingskjal)){
       $this->processIssueDocuments($issue->þingskjöl);
-      echo "Done with documents<br>";
+      echo "Done with documents\n";
     }
     if(isset($issue->atkvæðagreiðslur->atkvæðagreiðsla)){
       $this->processIssueVoting($issue->atkvæðagreiðslur);
-      echo "Done with voting<br>";
+      echo "Done with voting\n";
     }
     if(isset($issue->umsagnabeiðnir->umsagnabeiðni)){
       $this->processReviewRequests($issue->umsagnabeiðnir);
-      echo "Done with Review Requests<br>";
+      echo "Done with Review Requests\n";
     }
     if(isset($issue->erindaskrá->erindi)){
       $this->processReviews($issue->erindaskrá);
-      echo "Done with Reviews<br>";
+      echo "Done with Reviews\n";
     }
     if(isset($issue->ræður->ræða)){
       $this->processSpeeches($issue->mál, $issue->ræður);
-      echo "Done with Speeches<br>";
+      echo "Done with Speeches\n";
     }
   }
 

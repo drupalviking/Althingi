@@ -150,6 +150,7 @@ return array(
     'controllers' => array(
         'invokables' => array(
             'Althingi\Controller\Assembly' => 'Althingi\Controller\AssemblyController',
+            'Althingi\Controller\Console' => 'Althingi\Controller\ConsoleController',
             'Althingi\Controller\Index' => 'Althingi\Controller\IndexController',
             'Althingi\Controller\Issue' => 'Althingi\Controller\IssueController',
             'Althingi\Controller\Speech' => 'Althingi\Controller\SpeechController',
@@ -187,7 +188,19 @@ return array(
         ),
     ),
     // Placeholder for console routes
-    'console' => array(
-        'router' => array(),
+  'console' => array(
+    'router' => array(
+      'routes' => array(
+        'process-assembly' => array(
+          'options' => array(
+            'route'    => 'process-assembly',
+            'defaults' => array(
+              'controller' => 'Althingi\Controller\Console',
+              'action'     => 'process-assembly'
+            )
+          )
+        ),
+      ),
     ),
+  ),
 );
