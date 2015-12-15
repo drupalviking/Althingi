@@ -37,7 +37,7 @@ class XMLFeed implements DataSourceAwareInterface{
   }
 
   public function bootstrapAssembly($assembly_id){
-    //$this->processAssemblyPersons($assembly_id);
+    $this->processAssemblyPersons($assembly_id);
     echo "Done with Assembly Persons, Ass: " . $assembly_id . "\n";
     $this->processAssemblyMeetings($assembly_id);
     echo "Done with Assembly Meetings, Ass: " . $assembly_id . "\n";
