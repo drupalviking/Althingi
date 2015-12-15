@@ -18,7 +18,7 @@ class ConsoleController extends AbstractActionController {
   public function processAssemblyAction() {
     $sm = $this->getServiceLocator();
     $xmlStreamService = $sm->get('Althingi\Service\XMLFeed');
-    $xmlStreamService->bootstrapAssembly(144);
+    $xmlStreamService->bootstrapAssembly(145);
     echo "Run done\n";
   }
 }
